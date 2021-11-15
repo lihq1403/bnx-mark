@@ -35,6 +35,7 @@ import {
 } from "../utils/emuns";
 import { filterHegeOne } from "../utils/util";
 import NowAddress from "../components/NowAddress";
+import BnxPrice from "../components/BnxPrice";
 
 const MyHeroContainer = styled.div`
   width: 100%;
@@ -53,6 +54,7 @@ const Gold = ({ address, contracts }) => {
   const [filterGold, setFilterGold] = useState(1000);
   const [selectedRowKeys, setselectedRowKeys] = useState([]);
   const [copyAddress, setCopyAddress] = useState(address);
+  const [gold, setGold] = useState(0);
 
   useEffect(() => {
     setMyWorkCardSelectedList([]);
@@ -60,8 +62,20 @@ const Gold = ({ address, contracts }) => {
     getWordCards();
   }, [copyAddress]);
 
+  const getPrice = () => {
+    const goldid = "12082";
+    fetch(
+      `https://3rdparty-apis.coinmarketcap.com/v1/cryptocurrency/widget?id=${goldid}&convert_id=1,2781,2781`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        setGold(res.data[goldid].quote["2781"].price || 0);
+      });
+  };
+
   // 工作中的卡
   const getWordCards = () => {
+    getPrice()
     if (!address || !contracts) {
       Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
       return;
@@ -449,11 +463,12 @@ const Gold = ({ address, contracts }) => {
           BinaryX官网
         </a>
       </div>
+      <BnxPrice />
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          margin: 20,
+          margin: isMobile() ? 0 : 20,
           flexWrap: "wrap",
         }}
       >
@@ -562,15 +577,15 @@ const Gold = ({ address, contracts }) => {
           }}
         >
           <Tag>挖矿卡片数量: {gongzuoList.length}</Tag>
-          <Tag>每日预计收益: {budgetGoldTotal}</Tag>
-          <Tag>挖矿总收益: {goldTotal.toFixed(2)}</Tag>
+          <Tag>每日预计收益: {gold === 0 ? `${budgetGoldTotal} GOLD` : `${(budgetGoldTotal * gold).toFixed(2)} USD`}</Tag>
+          <Tag>挖矿总收益: {gold === 0 ? `${goldTotal.toFixed(2)} GOLD` : `${(goldTotal * gold).toFixed(2)} USD`}</Tag>
         </Space>
       </div>
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          margin: 20,
+          margin: isMobile() ? 0 : 20,
           flexWrap: "wrap",
           alignItems: "center",
         }}

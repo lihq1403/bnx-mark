@@ -5,6 +5,7 @@ import { isMobile } from "../utils/util";
 import markJson from "../assets/marks.json";
 import { useEffect, useState } from "react";
 import { Robber, Warrior, Ranger, Katrina, Mage } from "../utils/emuns";
+import BnxPrice from "../components/BnxPrice";
 const LowPriceContainer = styled.div`
   width: 100%;
   min-height: 100vh;
@@ -84,6 +85,7 @@ const LowPrice = () => {
             BinaryX市场官网
           </a>
         </div>
+        <BnxPrice />
         <Button type="primary" style={{ margin: 3 }} onClick={getLowPrices}>
           刷新
         </Button>

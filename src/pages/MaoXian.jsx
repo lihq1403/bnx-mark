@@ -16,6 +16,7 @@ import { BaseColums, HegeColumn, TokenColumn } from "../utils/colums";
 import { isMobile, filterHegeOne, initWeb3, ff } from "../utils/util";
 import { Robber, Warrior, Ranger, Mage, Katrina, names } from "../utils/emuns";
 import NowAddress from "../components/NowAddress";
+import BnxPrice from "../components/BnxPrice";
 
 const { Option } = Select;
 
@@ -712,6 +713,7 @@ const MaoXian = ({ address, contracts }) => {
           BinaryX官网
         </a>
       </div>
+      <BnxPrice />
       <div
         style={{
           display: "flex",

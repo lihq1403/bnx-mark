@@ -103,7 +103,7 @@ export const Addresss = {
   amzAddress: "0x3d7b0001e03096d3795Fd5D984AD679467546d73",
   tokenAddress: "0xd3c9609B6CBC6eF02390F33C230590c38F9E5f9D",
   poolAddress: "0xe4dd4794C915CB99f5A12cA8058d8B45fFEa8545",
-  fightAddress: "0x65261f17743fd5fE74c69d03147A1F21F7658db6",
+  fightAddress: "0x17D4dc90B06Ef4e88911Df63D860a7B5ced5997c",
 };
 export const names = {
   [Robber]: "盗贼",

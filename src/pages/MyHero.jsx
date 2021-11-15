@@ -25,6 +25,7 @@ import {
   names,
 } from "../utils/emuns";
 import NowAddress from "../components/NowAddress";
+import BnxPrice from "../components/BnxPrice";
 const MyHeroContainer = styled.div`
   width: 100%;
   min-height: 100vh;
@@ -502,11 +503,12 @@ const MyHero = ({ address, contracts }) => {
           BinaryX官网
         </a>
       </div>
+      <BnxPrice />
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          margin: 20,
+          margin: isMobile() ? 0 : 20,
           flexWrap: "wrap",
         }}
       >

@@ -15,6 +15,7 @@ import Web3 from "web3";
 import { isMobile, initWeb3, ff } from "../utils/util";
 import NowAddress from "../components/NowAddress";
 import { Addresss } from "../utils/emuns";
+import BnxPrice from "../components/BnxPrice";
 
 const MyHeroContainer = styled.div`
   width: 100%;
@@ -297,6 +298,7 @@ const BaoXiang = ({ address, contracts }) => {
           BinaryX官网
         </a>
       </div>
+      <BnxPrice />
       <div
         style={{
           display: "flex",

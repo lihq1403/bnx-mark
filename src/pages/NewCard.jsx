@@ -4,6 +4,7 @@ import NowAddress from "../components/NowAddress";
 import { useState } from "react";
 import { MyHeroColums, CardMColums } from "../utils/colums";
 import { ff, isMobile } from "../utils/util";
+import BnxPrice from "../components/BnxPrice";
 
 const MyHeroContainer = styled.div`
   width: 100%;
@@ -128,8 +129,8 @@ const NewCard = ({ card, nowaddress, address, contracts, contractss }) => {
                 Number(info[0][5]),
               token_id: token_id,
             };
-
-            setCards([...crads, card]);
+            crads.push(card)
+            setCards(crads);
             if (num > 1) {
               getOneCard(num - 1, trans);
             }
@@ -158,6 +159,7 @@ const NewCard = ({ card, nowaddress, address, contracts, contractss }) => {
           BinaryX
         </a>
       </div>
+      <BnxPrice />
       <div
         style={{
           display: "flex",
