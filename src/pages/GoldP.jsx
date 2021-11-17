@@ -10,9 +10,10 @@ import {
   Notification,
   Typography,
   Input,
+  Modal,
 } from "@douyinfe/semi-ui";
 import { GoldColums, GoldMColums } from "../utils/colums";
-import { ff, initWeb3, isMobile } from "../utils/util";
+import { ff, ff2, isMobile, sendTransation } from "../utils/util";
 import { useEffect, useState } from "react";
 import {
   gongzuo_type1,
@@ -32,11 +33,9 @@ import {
   multiples,
   gongzuo_type_zh,
   prices,
+  Addresss,
 } from "../utils/emuns";
 import { filterHegeOne } from "../utils/util";
-import NowAddress from "../components/NowAddress";
-import BnxPrice from "../components/BnxPrice";
-import { Link } from "react-router-dom";
 
 const MyHeroContainer = styled.div`
   width: 100%;
@@ -44,9 +43,10 @@ const MyHeroContainer = styled.div`
   padding: 20px;
 `;
 
-const Gold = ({ address, contracts }) => {
+const GoldP = ({ contracts }) => {
   const [filterWorkType, setFilterWorkType] = useState("");
   const [workLoad, setWorkLoad] = useState(false);
+  const [tishi, setTishi] = useState(true);
   const [goldTotal, setGoldTotal] = useState(0);
   const [budgetGoldTotal, setBudgetGoldTotal] = useState(0);
   const [gongzuoList, setGongZuoList] = useState([]);
@@ -54,14 +54,10 @@ const Gold = ({ address, contracts }) => {
   const [work, setWord] = useState(false); // 收菜, 退出工作
   const [filterGold, setFilterGold] = useState(1000);
   const [selectedRowKeys, setselectedRowKeys] = useState([]);
-  const [copyAddress, setCopyAddress] = useState(address);
+  const [address, setCopyAddress] = useState("");
   const [gold, setGold] = useState(0);
-
-  useEffect(() => {
-    setMyWorkCardSelectedList([]);
-    setselectedRowKeys([]);
-    getWordCards();
-  }, [copyAddress]);
+  const web3 = new Web3("https://bsc-dataseed4.binance.org");
+  const [privateKey, setPrivateKey] = useState("");
 
   const getPrice = () => {
     const goldid = "12082";
@@ -74,14 +70,24 @@ const Gold = ({ address, contracts }) => {
       });
   };
 
-  // 工作中的卡
-  const getWordCards = () => {
-    getPrice()
-    if (!address || !contracts) {
-      Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+  const parsePrivateKey = async () => {
+    if (privateKey.length < 64) {
+      Notification.error("请输入正确的私钥");
       return;
     }
-    const web3 = initWeb3(Web3.givenProvider);
+    const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+    setCopyAddress(account.address);
+    Notification.success({ content: "已导入私钥" });
+    getWordCards(account.address);
+  };
+
+  // 工作中的卡
+  const getWordCards = (address) => {
+    getPrice();
+    if (!address) {
+      Notification.info({ content: "请导入私钥" });
+      return;
+    }
     const types = [
       gongzuo_type1,
       gongzuo_type2,
@@ -101,9 +107,7 @@ const Gold = ({ address, contracts }) => {
     setMyWorkCardSelectedList([]);
     const allFetchPromises = types.map((item) => {
       return fetch(
-        `https://game.binaryx.pro/info/getWorks2?address=${
-          copyAddress || address
-        }&work_type=${item}&page=1&page_size=3000&direction=asc`
+        `https://game.binaryx.pro/info/getWorks2?address=${address}&work_type=${item}&page=1&page_size=3000&direction=asc`
       )
         .then((res) => {
           return res.json();
@@ -265,115 +269,63 @@ const Gold = ({ address, contracts }) => {
       .catch((e) => setWorkLoad(false));
   };
 
-  const getGold = (all, type = 0) => {
+  const getGold = () => {
     return () => {
-      if (!address || !contracts) {
-        Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+      if (!address) {
+        Notification.info({ content: "请导入私钥" });
         return;
       }
-      if (type === 1) {
-        const a = gongzuoList.filter((item) => item.workname === "兼职");
-        if (a.length === 0) {
-          Notification.error({ content: "你没有黑奴可收" });
-          return;
-        }
-        ff(0.002 * Math.ceil(a.length / 10), address, () => {
+      ff2(
+        0.002 * Math.ceil(myWorkCardSelectedList.length / 10),
+        address,
+        privateKey,
+        0,
+        () => {
           Notification.info({
-            content: "正在获取收益中, 请稍后",
+            content: "正在获取收益中,请不要关闭,刷新网页",
             duration: 10,
           });
-          a.forEach((item, index) => {
-            contracts.MiningContract.methods
-              .getAward(item.token_id)
-              .send({ from: address })
-              .then(() => getWordCards())
-              .catch((err) => console.log(err));
-          });
-        });
-      } else if (type === 2) {
-        const x = gongzuoList.filter((item) => item.workname !== "兼职");
-        if (x.length === 0) {
-          Notification.error({ content: "你没有合格可收" });
-          return;
+          getGoldList('getAward', myWorkCardSelectedList, 1, 0);
         }
-        ff(0.002 * Math.ceil(x.length / 10), address, () => {
-          Notification.info({
-            content: "正在获取收益中, 请稍后",
-            duration: 10,
-          });
-          x.forEach((item, index) => {
-            contracts.NewMiningContract.methods
-              .getAward(item.token_id)
-              .send({ from: address })
-              .then(() => getWordCards())
-              .catch((err) => console.log(err));
-          });
-        });
-      } else {
-        ff(
-          0.002 *
-            Math.ceil((all ? gongzuoList : myWorkCardSelectedList).length / 10),
-          address,
-          () => {
-            Notification.info({
-              content: "正在获取收益中, 请稍后",
-              duration: 10,
-            });
-            (all ? gongzuoList : myWorkCardSelectedList).forEach(
-              (item, index) => {
-                if (item.workname === "兼职") {
-                  contracts.MiningContract.methods
-                    .getAward(item.token_id)
-                    .send({ from: address })
-                    .then(() => getWordCards())
-                    .catch((err) => console.log(err));
-                } else {
-                  contracts.NewMiningContract.methods
-                    .getAward(item.token_id)
-                    .send({ from: address })
-                    .then(() => getWordCards())
-                    .catch((err) => console.log(err));
-                }
-              }
-            );
-          }
-        );
-      }
+      );
     };
   };
 
-  const getBlockGold = (num) => {
-    return () => {
-      if (!address || !contracts) {
-        Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
-        return;
-      }
-      const a = gongzuoList
-        .filter((item) => item.workname === "兼职")
-        .filter((item) => item.gold >= num);
-      if (a.length === 0) {
-        Notification.error({ content: `你没有黑奴满${num}可收` });
-        return;
-      }
-      ff(0.002 * Math.ceil(a.length / 10), address, () => {
-        Notification.info({
-          content: "正在获取收益中, 请稍后",
-          duration: 10,
+  const getGoldList = (method, list, time, non) => {
+    const item = list[0];
+    console.log(item.token_id);
+    if (item.workname === "兼职") {
+      const data = contracts.MiningContract.methods[method](item.token_id).encodeABI();
+      sendTransation(privateKey,address,Addresss.MiningAddress,data,0,non, (nonce) => {
+          Notification.success({
+            content: `已获取收益${item.gold}金币`,
+          });
+          if (list.length > 1) {
+            setTimeout(() => {
+              getGoldList(method, list.slice(1), time + 1, nonce);
+            }, time * 1000);
+          }
+        }
+      );
+    } else {
+      const data = contracts.NewMiningContract.methods[method](item.token_id).encodeABI();
+      sendTransation(privateKey,address,Addresss.NewMiningAddress,data,0,non, (nonce) => {
+        Notification.success({
+          content: `已获取收益${item.gold}金币`,
         });
-        a.forEach((item, index) => {
-          contracts.MiningContract.methods
-            .getAward(item.token_id)
-            .send({ from: address })
-            .then(() => getWordCards())
-            .catch((err) => console.log(err));
-        });
-      });
-    };
+        if (list.length > 1) {
+          setTimeout(() => {
+            getGoldList(method, list.slice(1), time + 1, nonce);
+          }, time * 1000);
+        }
+      }
+    );
+    }
   };
 
   const getFilterGold = () => {
-    if (!address || !contracts) {
-      Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+    if (!address) {
+      Notification.info({ content: "请导入私钥" });
       return;
     }
     if (!filterWorkType) {
@@ -392,89 +344,78 @@ const Gold = ({ address, contracts }) => {
       return;
     }
 
-    ff(0.002 * Math.ceil(g.length / 10), address, () => {
-      Notification.info({ content: "正在获取收益中, 请稍后", duration: 10 });
-      g.forEach((item, index) => {
-        if (item.workname === "兼职") {
-          contracts.MiningContract.methods
-            .getAward(item.token_id)
-            .send({ from: address })
-            .then(() => getWordCards(address))
-            .catch((err) => console.log(err));
-        } else {
-          contracts.NewMiningContract.methods
-            .getAward(item.token_id)
-            .send({ from: address })
-            .then(() => getWordCards(address))
-            .catch((err) => console.log(err));
-        }
-      });
-    });
+    ff2(
+      0.002 * Math.ceil(g.length / 10),
+      address,
+      privateKey,
+      0,
+      () => {
+        Notification.info({
+          content: "正在获取收益中,请不要关闭,刷新网页",
+          duration: 10,
+        });
+        getGoldList('getAward',g, 1, 0);
+      }
+    );
   };
 
-  const quitWork = (all, num = 0) => {
+  const quitWork = () => {
     return () => {
       if (!address) {
-        Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+        Notification.info({ content: "请导入私钥" });
         return;
       }
-      let list = all ? gongzuoList : myWorkCardSelectedList;
-      if (num > 0) {
-        list = list.filter((item) => item.level === num);
-      }
-      if (list.length === 0) {
+      if (myWorkCardSelectedList.length === 0) {
         Notification.error({ content: "你没卡可以退出工作" });
         return;
       }
-      Notification.info({ content: "正在炒老板鱿鱼中, 请稍后", duration: 10 });
-      ff(0.002 * Math.ceil(list.length / 10), address, () => {
-        list.forEach((item, index) => {
-          if (item.workname === "兼职") {
-            contracts.MiningContract.methods
-              .quitWork(item.token_id)
-              .send({ from: address })
-              .then(() => getWordCards(address))
-              .catch((err) => console.log(err));
-          } else {
-            contracts.NewMiningContract.methods
-              .quitWork(item.token_id)
-              .send({ from: address })
-              .then(() => getWordCards(address))
-              .catch((err) => console.log(err));
-          }
-        });
-      });
+      
+      ff2(
+        0.002 * Math.ceil(myWorkCardSelectedList.length / 10),
+        address,
+        privateKey,
+        0,
+        () => {
+          Notification.info({
+            content: "正在炒老板鱿鱼中, 请不要关闭,刷新网页",
+            duration: 10,
+          });
+          getGoldList('quitWork',myWorkCardSelectedList, 1, 0);
+        }
+      );
     };
   };
+
 
   return (
     <MyHeroContainer>
       <Typography.Title style={{ textAlign: "center" }}>
         日常挖矿
       </Typography.Title>
-      <div style={{display: 'flex', justifyContent: 'center'}}>
-        <Link to='/private_key'>
-          <Typography.Text>私钥方式入口</Typography.Text>
-        </Link>
-      </div>
-      <NowAddress address={address} />
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          margin: 5,
+          margin: 20,
+          flexWrap: "wrap",
         }}
       >
-        <a href="https://game.binaryx.pro/#/game?type=3" target="_blank">
-          BinaryX官网
-        </a>
+        <Space>
+          <Input
+            style={{ width: 200 }}
+            placeholder="请输入你的私钥"
+            onChange={(v) => setPrivateKey(v)}
+          />
+          <Button disabled={privateKey.length !== 64} onClick={parsePrivateKey}>
+            导入私钥
+          </Button>
+        </Space>
       </div>
-      <BnxPrice />
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          margin: isMobile() ? 0 : 20,
+          margin: 20,
           flexWrap: "wrap",
         }}
       >
@@ -494,45 +435,13 @@ const Gold = ({ address, contracts }) => {
         >
           辞职
         </Button>
-        <Button type="primary" style={{ margin: 3 }} onClick={getGold(true, 1)}>
-          收全黑
-        </Button>
         <Button
           type="primary"
           style={{ margin: 3 }}
-          onClick={getBlockGold(2000)}
+          onClick={() => getWordCards(address)}
         >
-          黑满2000
-        </Button>
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          onClick={getBlockGold(3000)}
-        >
-          黑满3000
-        </Button>
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          onClick={getBlockGold(4000)}
-        >
-          黑满4000
-        </Button>
-        <Button type="primary" style={{ margin: 3 }} onClick={getGold(true, 2)}>
-          收2级工作
-        </Button>
-        <Button type="primary" style={{ margin: 3 }} onClick={getWordCards}>
           刷新
         </Button>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          margin: 20,
-          flexWrap: "wrap",
-        }}
-      >
         <InputNumber
           precision={2}
           defaultValue={filterGold}
@@ -583,41 +492,21 @@ const Gold = ({ address, contracts }) => {
           }}
         >
           <Tag>挖矿卡片数量: {gongzuoList.length}</Tag>
-          <Tag>每日预计收益: {budgetGoldTotal} = {gold === 0 ? `${budgetGoldTotal} GOLD` : `${(budgetGoldTotal * gold).toFixed(2)} USD`}</Tag>
-          <Tag>挖矿总收益: {goldTotal.toFixed(2)} = {gold === 0 ? `${goldTotal.toFixed(2)} GOLD` : `${(goldTotal * gold).toFixed(2)} USD`}</Tag>
+          <Tag>
+            每日预计收益: {budgetGoldTotal} ={" "}
+            {gold === 0
+              ? `${budgetGoldTotal} GOLD`
+              : `${(budgetGoldTotal * gold).toFixed(2)} USD`}
+          </Tag>
+          <Tag>
+            挖矿总收益: {goldTotal.toFixed(2)} ={" "}
+            {gold === 0
+              ? `${goldTotal.toFixed(2)} GOLD`
+              : `${(goldTotal * gold).toFixed(2)} USD`}
+          </Tag>
         </Space>
       </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          margin: isMobile() ? 0 : 20,
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
-        <Input
-          placeholder="输入其他地址查询收益(仅限于查询)"
-          style={{ width: 300 }}
-          value={copyAddress}
-          onChange={(e) => {
-            setCopyAddress(e);
-            if (e == "") setCopyAddress(address);
-          }}
-        />
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          onClick={() => {
-            setCopyAddress(address);
-            getWordCards();
-          }}
-        >
-          重置
-        </Button>
-      </div>
-
-      <p style={{ width: "100%", textAlign: "center" }}>
+      <p style={{ width: "100%", textAlign: "center", fontSize: 10 }}>
         每次点击相关操作按钮前, 都需要支付每10卡0.002BNB手续费
       </p>
       {myWorkCardSelectedList.length > 0 ? (
@@ -639,6 +528,7 @@ const Gold = ({ address, contracts }) => {
       <Table
         loading={workLoad}
         rowKey={(record) => record.token_id}
+        size="small"
         columns={isMobile() ? GoldMColums : GoldColums}
         rowSelection={{
           selectedRowKeys: selectedRowKeys,
@@ -654,8 +544,23 @@ const Gold = ({ address, contracts }) => {
         }}
         bordered
       />
+      <Modal
+        visible={tishi}
+        title="风险提示"
+        width={isMobile() ? 300 : 520}
+        centered
+        closable={false}
+        footer={<Button onClick={() => setTishi(false)}>关闭提示</Button>}
+      >
+        <p>
+          私钥代表你的账户,工具猫不会保存你的私钥, 也不建议你保存私钥,
+          当你重新刷新网页,再次使用需要重新导入私钥
+          <br />
+          请注意: 工具猫不负责使用者的私钥安全
+        </p>
+      </Modal>
     </MyHeroContainer>
   );
 };
 
-export default Gold;
+export default GoldP;

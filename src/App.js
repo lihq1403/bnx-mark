@@ -41,6 +41,8 @@ import { LocaleProvider } from "@douyinfe/semi-ui";
 import cookie from "react-cookies";
 import BanShouWan from "./pages/BanShouWan";
 import BaoXiang from "./pages/BaoXiang";
+import GoldP from "./pages/GoldP";
+import BanShouWanP from "./pages/BanShouWanP";
 
 zh_CN["ToolCat"] = {
   AppTitle: "工具猫",
@@ -393,6 +395,28 @@ const App = () => {
               path="/xiang"
               element={
                 <BaoXiang
+                  nowaddress={locale["ToolCat"].nowaddress}
+                  address={address}
+                  contracts={contracts}
+                  contractss={contractss}
+                />
+              }
+            />
+            <Route
+              path="/private_key"
+              element={
+                <GoldP
+                  nowaddress={locale["ToolCat"].nowaddress}
+                  address={address}
+                  contracts={contracts}
+                  contractss={contractss}
+                />
+              }
+            />
+            <Route
+              path="/private_key_shou"
+              element={
+                <BanShouWanP
                   nowaddress={locale["ToolCat"].nowaddress}
                   address={address}
                   contracts={contracts}

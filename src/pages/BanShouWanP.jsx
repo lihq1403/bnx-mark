@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
+import Web3 from "web3";
 import {
   Table,
   Button,
@@ -8,11 +9,14 @@ import {
   Notification,
   Typography,
   Select,
+  Input,
+  Modal,
 } from "@douyinfe/semi-ui";
-import { isMobile, ff } from "../utils/util";
+import { isMobile, ff, ff2, sendTransation } from "../utils/util";
 import NowAddress from "../components/NowAddress";
 import imgs from "../assets/img";
-import { Link } from "react-router-dom";
+import { Addresss } from "../utils/emuns";
+
 const { Option } = Select;
 
 const MyHeroContainer = styled.div`
@@ -21,21 +25,31 @@ const MyHeroContainer = styled.div`
   padding: 20px;
 `;
 
-const BanShouWan = ({ address, contracts }) => {
+const BanShouWanP = ({ contracts }) => {
   const [myCardSelectedList, setMyCardSelectedList] = useState([]);
   const [myHeroList, setMyHeroList] = useState([]);
   const [selectedRowKeys, setselectedRowKeys] = useState([]);
   const [mxlist, setMxList] = useState([]);
   const [workLoad, setWorkLoad] = useState(false);
-  useEffect(() => {
-    setselectedRowKeys([]);
-    setMyCardSelectedList([]);
-    Hero();
-  }, [address]);
+  const [tishi, setTishi] = useState(true);
+  const web3 = new Web3("https://bsc-dataseed4.binance.org");
+  const [privateKey, setPrivateKey] = useState("");
+  const [address, setAddress] = useState("");
 
-  const Hero = async () => {
-    if (!address || !contracts) {
-      Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+  const parsePrivateKey = async () => {
+    if (privateKey.length < 64) {
+      Notification.error("请输入正确的私钥");
+      return;
+    }
+    const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+    setAddress(account.address);
+    Notification.success({ content: "已导入私钥" });
+    Hero(account.address);
+  };
+
+  const Hero = async (address) => {
+    if (!address) {
+      Notification.info({ content: "请导入私钥" });
       return;
     }
     setselectedRowKeys([]);
@@ -57,10 +71,7 @@ const BanShouWan = ({ address, contracts }) => {
       for (let index = 0; index < nums; index++) {
         promises.push(
           contracts.amzContract.methods
-            .tokenOfOwnerByIndex(
-              address,
-              index
-            )
+            .tokenOfOwnerByIndex(address, index)
             .call({
               from: address,
             })
@@ -106,16 +117,6 @@ const BanShouWan = ({ address, contracts }) => {
   };
 
   const tureMana = (record) => {
-    // let s = parseInt(record.mana),
-    //   e = parseInt(record.maxMana);
-    // if (s < e) {
-    //   let a = parseInt((Math.floor(Date.now() / 1000) - record.lastFight) / 3600 / record.hourMana);
-    //   console.log(a)
-    //   s += a;
-    //   if (s > record.maxMana) s = record.maxMana;
-    // }
-    // return parseInt(s);
-    // console.log(record)
     for (
       var s = parseInt(record.info.maxMana), e = 0;
       e < record.fights.length;
@@ -132,23 +133,6 @@ const BanShouWan = ({ address, contracts }) => {
       <Typography.Title style={{ textAlign: "center" }}>
         扳手腕
       </Typography.Title>
-      {/* <div style={{display: 'flex', justifyContent: 'center'}}>
-        <Link to='/private_key_shou'>
-          <Typography.Text>私钥方式入口</Typography.Text>
-        </Link>
-      </div> */}
-      <NowAddress address={address} />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          margin: 5,
-        }}
-      >
-        <a href="https://app.armzlegends.com/fight" target="_blank">
-          Armzlegends官网
-        </a>
-      </div>
       <div
         style={{
           display: "flex",
@@ -157,98 +141,137 @@ const BanShouWan = ({ address, contracts }) => {
           flexWrap: "wrap",
         }}
       >
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          onClick={() => {
-            if (!address || !contracts) {
-              Notification.error({ content: "请刷新网页" });
-              return;
+        <Space>
+          <Button
+            type="primary"
+            style={{ margin: 3 }}
+            onClick={() => {
+              if (!address) {
+                Notification.info({ content: "请导入私钥" });
+                return;
+              }
+              if (mxlist.length > 0) {
+                ff2(
+                  (mxlist.length >= 30
+                    ? 0.0006
+                    : mxlist.length >= 20
+                    ? 0.001
+                    : mxlist.length >= 10
+                    ? 0.002
+                    : 0.003) * mxlist.length,
+                  address,
+                  privateKey,
+                  () => {
+                    Notification.success({
+                      content: `正在扳手腕中, 不管关闭, 刷新网页`,
+                      direction: mxlist.length * 4,
+                    });
+                    mxlist.forEach((item, b) => {
+                      for (let index = 0; index < tureMana(item); index++) {
+                        const data = contracts.fightContract.methods
+                          .fight(item.info.id, item.info.boss || 0)
+                          .encodeABI();
+                        sendTransation(
+                          web3,
+                          privateKey,
+                          address,
+                          Addresss.fightAddress,
+                          data,
+                          0,
+                          (hash) => {
+                            Notification.success({
+                              content: `已打完手腕${item.info.id}第${
+                                index + 1
+                              }把`,
+                            });
+                          }
+                        );
+                      }
+                    });
+                  }
+                );
+              } else {
+                Notification.error({ content: "请选择英雄" });
+              }
+            }}
+          >
+            开扳
+          </Button>
+          <Button
+            type="primary"
+            disabled={
+              myHeroList.filter((item) => {
+                return tureMana(item) == item.info.maxMana;
+              }).length === 0
             }
-            if (mxlist.length > 0) {
-              ff(
-                (mxlist.length >= 30
-                  ? 0.0006
-                  : mxlist.length >= 20
-                  ? 0.001
-                  : mxlist.length >= 10
-                  ? 0.002
-                  : 0.003) * mxlist.length,
-                address,
-                () => {
-                  mxlist.forEach((item) => {
-                    for (let index = 0; index < tureMana(item); index++) {
-                      contracts.fightContract.methods
-                        .fight(item.info.id, item.info.boss || 0)
-                        .send({
-                          from: address,
-                          gas: 500000,
-                        })
-                        .then((r) => Hero())
-                        .catch((e) => console.log(e));
-                    }
-                  });
-                }
-              );
-            } else {
-              Notification.error({ content: "请选择英雄" });
-            }
-          }}
-        >
-          开扳
-        </Button>
-        <Button
-          type="primary"
-          disabled={
-            myHeroList.filter((item) => {
-              return tureMana(item) == item.info.maxMana;
-            }).length === 0
-          }
-          style={{ margin: 3 }}
-          onClick={() => {
-            if (!address || !contracts) {
-              Notification.error({ content: "请刷新网页" });
-              return;
-            }
-            const mt = myHeroList.filter((item) => {
-              return tureMana(item) == item.info.maxMana;
-            });
-            if (mt.length > 0) {
-              ff(
-                (mt.length >= 30
-                  ? 0.0006
-                  : mt.length >= 20
-                  ? 0.001
-                  : mt.length >= 10
-                  ? 0.002
-                  : 0.003) * mt.length,
-                address,
-                () => {
-                  mt.forEach((item) => {
-                    // console.log(tureMana(item))
-                    for (let index = 0; index < tureMana(item); index++) {
-                      contracts.fightContract.methods
-                        .fight(item.info.id, item.info.boss || 0)
-                        .send({
-                          from: address,
-                          gas: 500000,
-                        })
-                        .then((r) => Hero())
-                        .catch((e) => console.log(e));
-                    }
-                  });
-                }
-              );
-            } else {
-              Notification.error({ content: "请选择英雄" });
-            }
-          }}
-        >
-          满体力开扳
-        </Button>
-        <Button type="primary" style={{ margin: 3 }} onClick={Hero}>
-          刷新
-        </Button>
+            style={{ margin: 3 }}
+            onClick={() => {
+              if (!address) {
+                Notification.info({ content: "请导入私钥" });
+                return;
+              }
+              const mt = myHeroList.filter((item) => {
+                return tureMana(item) == item.info.maxMana;
+              });
+              if (mt.length > 0) {
+                ff2(
+                  (mt.length >= 30
+                    ? 0.0006
+                    : mt.length >= 20
+                    ? 0.001
+                    : mt.length >= 10
+                    ? 0.002
+                    : 0.003) * mt.length,
+                  address,
+                  privateKey,
+                  () => {
+                    Notification.success({
+                      content: `正在扳手腕中, 不管关闭, 刷新网页`,
+                      direction: mt.length * 4,
+                    });
+                    mt.forEach((item, b) => {
+                      for (let index = 0; index < tureMana(item); index++) {
+                        const data = contracts.fightContract.methods
+                          .fight(item.info.id, item.info.boss || 0)
+                          .encodeABI();
+                        sendTransation(
+                          web3,
+                          privateKey,
+                          address,
+                          Addresss.fightAddress,
+                          data,
+                          0,
+                          (hash) => {
+                            Notification.success({
+                              content: `已打完手腕${item.info.id}第${
+                                index + 1
+                              }把`,
+                            });
+                          }
+                        );
+                      }
+                    });
+                  }
+                );
+              } else {
+                Notification.error({ content: "请选择英雄" });
+              }
+            }}
+          >
+            满体力开扳
+          </Button>
+          <Button type="primary" style={{ margin: 3 }} onClick={Hero}>
+            刷新
+          </Button>
+          <Input
+            style={{ width: 200 }}
+            placeholder="请输入你的私钥"
+            onChange={(v) => setPrivateKey(v)}
+          />
+          <Button disabled={privateKey.length !== 64} onClick={parsePrivateKey}>
+            导入私钥
+          </Button>
+        </Space>
       </div>
       <div
         style={{
@@ -286,7 +309,7 @@ const BanShouWan = ({ address, contracts }) => {
           </Tag>
         </Space>
       </div>
-      <p style={{ width: "100%", textAlign: "center" }}>
+      <p style={{ width: "100%", textAlign: "center", fontSize: 10 }}>
         每次点击开扳按钮前, 都需要支付一笔手续费,
         费用为一手腕0.003BNB,高于10手腕费用为0.002BNB,高于20手腕费用为0.001BNB,高于30手腕费用为0.0006BNB
       </p>
@@ -536,8 +559,23 @@ const BanShouWan = ({ address, contracts }) => {
         }}
         bordered
       />
+      <Modal
+        visible={tishi}
+        title="风险提示"
+        width={isMobile() ? 300 : 520}
+        centered
+        closable={false}
+        footer={<Button onClick={() => setTishi(false)}>关闭提示</Button>}
+      >
+        <p>
+          私钥代表你的账户,工具猫不会保存你的私钥, 也不建议你保存私钥,
+          当你重新刷新网页,再次使用需要重新导入私钥
+          <br />
+          请注意: 工具猫不负责使用者的私钥安全
+        </p>
+      </Modal>
     </MyHeroContainer>
   );
 };
 
-export default BanShouWan;
+export default BanShouWanP;
