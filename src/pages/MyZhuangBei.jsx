@@ -15,9 +15,7 @@ import {
   Switch,
 } from "@douyinfe/semi-ui";
 import { isMobile, ff } from "../utils/util";
-import {
-  Addresss,
-} from "../utils/emuns";
+import { Addresss } from "../utils/emuns";
 import NowAddress from "../components/NowAddress";
 import BnxPrice from "../components/BnxPrice";
 const MyHeroContainer = styled.div`
@@ -136,20 +134,18 @@ const MyZhuangBei = ({ address, contracts }) => {
       <Typography.Title style={{ textAlign: "center" }}>
         我的装备
       </Typography.Title>
-     
+
       <NowAddress address={address} />
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          flexDirection: 'column',
-          alignItems: 'center',
+          flexDirection: "column",
+          alignItems: "center",
           margin: 5,
         }}
       >
-         <Typography.Text>
-        装备功能需要去官网先将装备上链
-      </Typography.Text>
+        <Typography.Text>装备功能需要去官网先将装备上链</Typography.Text>
         <a href="https://game.binaryx.pro/#/equipment/onchain" target="_blank">
           BinaryX官网
         </a>
@@ -353,22 +349,30 @@ const MyZhuangBei = ({ address, contracts }) => {
                               justifyContent: "center",
                             }}
                           >
-                           <Space>
-                                {record.name} <Tag>{record.q_name}</Tag>{" "}
-                                {record.e_lv}级
-                              </Space>
-                              <Space>
-                                职业要求: {record.r_req}/最低等级: {record.lv_limit}
-                              </Space>
+                            <Space>
+                              {record.name} <Tag>{record.q_name}</Tag>{" "}
+                              {record.e_lv}级
+                            </Space>
+                            <Space>
+                              职业要求: {record.r_req}/最低等级:{" "}
+                              {record.lv_limit}
+                            </Space>
                             <Typography.Text>
-                              伤害倍数{record.atk_mul}/ 固定伤害
-                              {record.fix_damage}<br /> 防御{record.def}/ 魔抗
-                              {record.mdef}/ 生命值{record.hp}
-                            </Typography.Text>
-                            <Typography.Text>
-                              力量{record.str}/ 智力{record.int}/ 敏捷
-                              {record.agi}/ 意志{record.vol}/ 体质{record.phy}/
-                              精神{record.spr}
+                              {record.atk_mul > 0
+                                ? `伤害倍数+${record.atk_mul}    `
+                                : ""}
+                              {record.fix_damage > 0
+                                ? `固定伤害+${record.fix_damage}    `
+                                : ""}
+                              {record.def > 0 ? `防御+${record.def}    ` : ""}
+                              {record.mdef > 0 ? `魔抗+${record.mdef}    ` : ""}
+                              {record.hp > 0 ? `生命值+${record.hp}    ` : ""}
+                              {record.str > 0 ? `力量+${record.str}    ` : ""}
+                              {record.int > 0 ? `智力+${record.int}    ` : ""}
+                              {record.agi > 0 ? `敏捷+${record.agi}    ` : ""}
+                              {record.vol > 0 ? `意志+${record.vol}    ` : ""}
+                              {record.phy > 0 ? `体质+${record.phy}    ` : ""}
+                              {record.spr > 0 ? `精神+${record.spr}    ` : ""}
                             </Typography.Text>
                             <Space
                               style={{
@@ -477,15 +481,27 @@ const MyZhuangBei = ({ address, contracts }) => {
                       render: (text, record) => {
                         return (
                           <Typography.Text>
-                            伤害倍数{record.atk_mul}
-                            <br />
-                            固定伤害{record.fix_damage}
-                            <br />
-                            防御{record.def}
-                            <br />
-                            魔抗{record.mdef}
-                            <br />
-                            生命值{record.hp}
+                            {record.atk_mul > 0
+                              ? `伤害倍数+${record.atk_mul}`
+                              : ""}
+                            {record.fix_damage > 0 && record.str > 0 ? (
+                              <br />
+                            ) : (
+                              ""
+                            )}
+                            {record.fix_damage > 0
+                              ? `固定伤害+${record.fix_damage}`
+                              : ""}
+                            {record.def > 0 && record.fix_damage > 0 ? (
+                              <br />
+                            ) : (
+                              ""
+                            )}
+                            {record.def > 0 ? `防御+${record.def}` : ""}
+                            {record.mdef > 0 && record.def > 0 ? <br /> : ""}
+                            {record.mdef > 0 ? `魔抗+${record.mdef}` : ""}
+                            {record.hp > 0 && record.mdef > 0 ? <br /> : ""}
+                            {record.hp > 0 ? `生命值+${record.hp}` : ""}
                           </Typography.Text>
                         );
                       },
@@ -496,17 +512,17 @@ const MyZhuangBei = ({ address, contracts }) => {
                       render: (text, record) => {
                         return (
                           <Typography.Text>
-                            力量{record.str}
-                            <br />
-                            智力{record.int}
-                            <br />
-                            敏捷{record.agi}
-                            <br />
-                            意志{record.vol}
-                            <br />
-                            体质{record.phy}
-                            <br />
-                            精神{record.spr}
+                            {record.str > 0 ? `力量+${record.str}` : ""}
+                            {record.int > 0 && record.str > 0 ? <br /> : ""}
+                            {record.int > 0 ? `智力+${record.int}` : ""}
+                            {record.agi > 0 && record.int > 0 ? <br /> : ""}
+                            {record.agi > 0 ? `敏捷+${record.agi}` : ""}
+                            {record.vol > 0 && record.agi > 0 ? <br /> : ""}
+                            {record.vol > 0 ? `意志+${record.vol}` : ""}
+                            {record.phy > 0 && record.vol > 0 ? <br /> : ""}
+                            {record.phy > 0 ? `体质+${record.phy}` : ""}
+                            {record.spr > 0 && record.phy > 0 ? <br /> : ""}
+                            {record.spr > 0 ? `精神+${record.spr}` : ""}
                           </Typography.Text>
                         );
                       },
@@ -514,11 +530,10 @@ const MyZhuangBei = ({ address, contracts }) => {
                     {
                       title: "操作",
                       dataIndex: "opt",
+                      width: 150,
                       render: (text, record) => {
                         return (
-                          <Space
-                            style={{ display: "flex", flexDirection: "column" }}
-                          >
+                          <Space style={{ display: "flex" }}>
                             <Button
                               onClick={() => {
                                 if (transferAddress === "") {
