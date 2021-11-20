@@ -12,6 +12,10 @@ export const gongzuo_type6 = `0xC5dDbb4ac27A939D914059A023C6A35F377B67Ff`; //皇
 export const gongzuo_type7 = `0xdcC5C1e7A3ADC8b7635565183a7385026502440B`; //军团士兵
 export const gongzuo_type8 = `0x0ac4eB7978E0dA0d53824bd590354C8Bd264C4e6`; //皇室顾问
 export const gongzuo_type9 = `0x87ecC7fEd6AdD823569c210D27AD9D2C7177b16e`; //传奇
+export const equipmentAddress = '0x87258c37e234366f1a7f7f1320bBc65Bcd88d250';
+export const equiplibAddress =  '0x750F0fD3e53ea76e371b6d609214eFce5862B988';
+export const equipoperaAddress =  '0x001EA8889F2C6d8A4beb15Aa1f0a32E4b6e4D1C3';
+export const equipSaleAddress = '0xB29782Ef0110154Ed45633B367c284085229Af2B';
 
 export const gongzuo_type_zh = (type) => {
   switch (type) {
@@ -99,6 +103,11 @@ export const Addresss = {
   GaojiAddress: "0xC5dDbb4ac27A939D914059A023C6A35F377B67Ff",
   SixthAddress: "0xdcC5C1e7A3ADC8b7635565183a7385026502440B",
   SeventhAddress: "0x0ac4eB7978E0dA0d53824bd590354C8Bd264C4e6",
+  //装备
+  equipmentAddress: '0x87258c37e234366f1a7f7f1320bBc65Bcd88d250',
+  equiplibAddress: '0x750F0fD3e53ea76e371b6d609214eFce5862B988',
+  equipoperaAddress: '0x001EA8889F2C6d8A4beb15Aa1f0a32E4b6e4D1C3',
+  equipSaleAddress: '0xB29782Ef0110154Ed45633B367c284085229Af2B',
   // 手腕
   amzAddress: "0x3d7b0001e03096d3795Fd5D984AD679467546d73",
   tokenAddress: "0xd3c9609B6CBC6eF02390F33C230590c38F9E5f9D",

@@ -12,6 +12,7 @@ import {
   Typography,
   Modal,
   InputNumber,
+  Switch,
 } from "@douyinfe/semi-ui";
 import { MyHeroColums } from "../utils/colums";
 import { isMobile, filterHegeOne, ff } from "../utils/util";
@@ -54,11 +55,15 @@ const MyHero = ({ address, contracts }) => {
   const [saleModal, setSaleModal] = useState(false);
   const [saleRecord, setSaleRecord] = useState([]);
   const [saleModalPrice, setSaleModalPrice] = useState(8.88);
-
+  const [isMark, setIsMark] = useState(false);
+  const [markList, setMarkList] = useState([]);
+  const [markListSelectedList, setMarkListSelectedList] = useState([]);
+  const [markListselectedRowKeys, setmarkListselectedRowKeys] = useState([]);
   useEffect(() => {
     setselectedRowKeys([]);
     Hero();
     getBnxGold();
+    getMarkHero();
   }, [address]);
 
   const getBnxGold = () => {
@@ -87,6 +92,35 @@ const MyHero = ({ address, contracts }) => {
         setInKey(Number(res) / Math.pow(10, 18));
       })
       .catch((err) => console.log(err));
+  };
+
+  const getMarkHero = () => {
+    if (!address || !contracts) {
+      Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+      return;
+    }
+    contracts.saleContractNew.methods
+      .getSellerOrder(address)
+      .call()
+      .then((orders) => {
+        // console.log(orders)
+        orders.filter(order => order != 0).forEach((order) => {
+          contracts.saleContractNew.methods
+                .getOrder(order)
+                .call()
+                .then((hero) => {
+                  const value = {
+                    mname: hero[0],
+                    name: names[hero[1]],
+                    price: (Number(hero[4]) / Math.pow(10, 18)).toFixed(4),
+                    token_id: hero[2],
+                    orderid: order,
+                  };
+                  markList.push(value);
+                  setMarkList(markList);
+                });
+        });
+      });
   };
 
   const Hero = async () => {
@@ -124,10 +158,7 @@ const MyHero = ({ address, contracts }) => {
     for (let index = 0; index < warrs; index++) {
       promises.push(
         contracts.WarriorContract.methods
-          .tokenOfOwnerByIndex(
-            address,
-            index
-          )
+          .tokenOfOwnerByIndex(address, index)
           .call()
           .catch((err) => console.log(err))
       );
@@ -135,10 +166,7 @@ const MyHero = ({ address, contracts }) => {
     for (let index = 0; index < robbers; index++) {
       promises.push(
         contracts.RobberContract.methods
-          .tokenOfOwnerByIndex(
-            address,
-            index
-          )
+          .tokenOfOwnerByIndex(address, index)
           .call()
           .catch((err) => console.log(err))
       );
@@ -146,10 +174,7 @@ const MyHero = ({ address, contracts }) => {
     for (let index = 0; index < mages; index++) {
       promises.push(
         contracts.MageContract.methods
-          .tokenOfOwnerByIndex(
-            address,
-            index
-          )
+          .tokenOfOwnerByIndex(address, index)
           .call()
           .catch((err) => console.log(err))
       );
@@ -157,10 +182,7 @@ const MyHero = ({ address, contracts }) => {
     for (let index = 0; index < youxias; index++) {
       promises.push(
         contracts.youxiaContract.methods
-          .tokenOfOwnerByIndex(
-            address,
-            index
-          )
+          .tokenOfOwnerByIndex(address, index)
           .call()
           .catch((err) => console.log(err))
       );
@@ -504,386 +526,587 @@ const MyHero = ({ address, contracts }) => {
         </a>
       </div>
       <BnxPrice />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          margin: isMobile() ? 0 : 20,
-          flexWrap: "wrap",
-        }}
-      >
-        <Input
-          style={{ width: 200, margin: 3 }}
-          placeholder={"请输入你要转移的BSC地址"}
-          onChange={(value) => setTransferAddress(value)}
-        />
-
-        <Popconfirm
-          title={`确定是否要转移卡到其他地址？`}
-          content={`请确认地址:${transferAddress}`}
-          onConfirm={toTransfer}
-        >
-          <Button
-            type="primary"
-            style={{ margin: 3 }}
-            disabled={!transferAddress}
-          >
-            转移
-          </Button>
-        </Popconfirm>
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          disabled={!jianzhi}
-          onClick={toJianZhi}
-        >
-          兼职工作
-        </Button>
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          disabled={!second}
-          onClick={toSecond}
-        >
-          二级工作
-        </Button>
-        <Button
-          type="primary"
-          style={{ margin: 3 }}
-          disabled={myCardSelectedList.length === 0}
-          onClick={() => {
-            setSaleModal(true);
-            setSaleRecord(myCardSelectedList);
-          }}
-        >
-          批量发布
-        </Button>
-        <Button type="primary" style={{ margin: 3 }} onClick={Hero}>
-          刷新
-        </Button>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          margin: 20,
-          flexWrap: "wrap",
-        }}
-      >
+      {markList.length > 0 ? (
         <Space
           style={{
             display: "flex",
             justifyContent: "center",
+            margin: isMobile() ? 0 : 10,
             flexWrap: "wrap",
           }}
         >
-          <Tag>黑奴 {cardNum.b}</Tag>
-          <Tag color="green">合格 {cardNum.h}</Tag>
-          <Tag color="red">已拥有最高等级 {cardNum.hightLevel}</Tag>
-          {cardNum.levels.map((item, index) => {
-            const colors = [
-              "amber",
-              "blue",
-              "cyan",
-              "indigo",
-              "lime",
-              "orange",
-              "pink",
-              "purple",
-              "red",
-              "teal",
-              "violet",
-              "yellow",
-              "light-blue",
-              "light-green",
-              "red",
-            ];
-            if (item == 0) {
-              return "";
-            }
-            return (
-              <Tag
-                color={colors[index]}
-                style={{ textAlign: "center" }}
-                key={index}
-              >
-                {index + 1}级 {item}
-              </Tag>
-            );
-          })}
+          <Typography.Text
+            strong={!isMark}
+            style={{ color: !isMark ? "var(--semi-color-text-0)" : "#999" }}
+          >
+            {"游戏内英雄"}
+          </Typography.Text>
+          <Switch onChange={(v) => setIsMark(v)} />
+          <Typography.Text
+            strong={isMark}
+            style={{ color: isMark ? "var(--semi-color-text-0)" : "#999" }}
+          >
+            {"市场未售出英雄"}
+          </Typography.Text>
         </Space>
-      </div>
-      <p style={{ width: "100%", textAlign: "center" }}>
-        每次点击相关操作按钮前, 都需要支付每10卡0.002BNB手续费,
-        单次发布,升级除外
-      </p>
-      {myCardSelectedList.length > 0 ? (
+      ) : (
+        ""
+      )}
+
+      {(isMark && markList.length > 0) ? (
         <div
           style={{
             display: "flex",
             justifyContent: "center",
-            margin: 5,
+            margin: isMobile() ? 0 : 20,
             flexWrap: "wrap",
           }}
         >
-          <p style={{ color: "var(--semi-color-text-0)" }}>
-            已选中: {myCardSelectedList.length}
-          </p>
+          <Button
+            type="primary"
+            style={{ margin: 3 }}
+            disabled={markListSelectedList.length === 0}
+            onClick={() => {
+              ff(
+                0.002 * Math.ceil(markListSelectedList.length / 10),
+                address,
+                () => {
+                  Notification.info({ content: "正在撤回" });
+                  for (
+                    let index = 0;
+                    index < markListSelectedList.length;
+                    index++
+                  ) {
+                    const element = markListSelectedList[index];
+                    contracts.saleContractNew.methods
+                      .cancelPlayer(element.orderid)
+                      .send({
+                        from: address,
+                      })
+                      .then((res) => {
+                        Notification.success({
+                          content: `撤回${element.mname}成功`,
+                        });
+                        getMarkHero();
+                      })
+                      .catch((e) => {
+                        Notification.error({
+                          content: `撤回${element.mname}失败`,
+                        });
+                      });
+                  }
+                }
+              );
+            }}
+          >
+            批量撤销
+          </Button>
+          <Button
+            type="primary"
+            style={{ margin: 3 }}
+            onClick={() => {
+              ff(0.002 * Math.ceil(markList.length / 10), address, () => {
+                Notification.info({ content: "正在撤回" });
+                for (let index = 0; index < markList.length; index++) {
+                  const element = markList[index];
+                  contracts.saleContractNew.methods
+                    .cancelPlayer(element.orderid)
+                    .send({
+                      from: address,
+                    })
+                    .then((res) => {
+                      Notification.success({
+                        content: `撤回${element.mname}成功`,
+                      });
+                      getMarkHero();
+                    })
+                    .catch((e) => {
+                      Notification.error({
+                        content: `撤回${element.mname}失败`,
+                      });
+                    });
+                }
+              });
+            }}
+          >
+            全部撤销
+          </Button>
+          <Button type="primary" style={{ margin: 3 }} onClick={getMarkHero}>
+            刷新
+          </Button>
         </div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              margin: isMobile() ? 0 : 20,
+              flexWrap: "wrap",
+            }}
+          >
+            <Input
+              style={{ width: 200, margin: 3 }}
+              placeholder={"请输入你要转移的BSC地址"}
+              onChange={(value) => setTransferAddress(value)}
+            />
+
+            <Popconfirm
+              title={`确定是否要转移卡到其他地址？`}
+              content={`请确认地址:${transferAddress}`}
+              onConfirm={toTransfer}
+            >
+              <Button
+                type="primary"
+                style={{ margin: 3 }}
+                disabled={!transferAddress}
+              >
+                转移
+              </Button>
+            </Popconfirm>
+            <Button
+              type="primary"
+              style={{ margin: 3 }}
+              disabled={!jianzhi}
+              onClick={toJianZhi}
+            >
+              兼职工作
+            </Button>
+            <Button
+              type="primary"
+              style={{ margin: 3 }}
+              disabled={!second}
+              onClick={toSecond}
+            >
+              二级工作
+            </Button>
+            <Button
+              type="primary"
+              style={{ margin: 3 }}
+              disabled={myCardSelectedList.length === 0}
+              onClick={() => {
+                setSaleModal(true);
+                setSaleRecord(myCardSelectedList);
+              }}
+            >
+              批量发布
+            </Button>
+            <Button type="primary" style={{ margin: 3 }} onClick={Hero}>
+              刷新
+            </Button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              margin: 20,
+              flexWrap: "wrap",
+            }}
+          >
+            <Space
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Tag>黑奴 {cardNum.b}</Tag>
+              <Tag color="green">合格 {cardNum.h}</Tag>
+              <Tag color="red">已拥有最高等级 {cardNum.hightLevel}</Tag>
+              {cardNum.levels.map((item, index) => {
+                const colors = [
+                  "amber",
+                  "blue",
+                  "cyan",
+                  "indigo",
+                  "lime",
+                  "orange",
+                  "pink",
+                  "purple",
+                  "red",
+                  "teal",
+                  "violet",
+                  "yellow",
+                  "light-blue",
+                  "light-green",
+                  "red",
+                ];
+                if (item == 0) {
+                  return "";
+                }
+                return (
+                  <Tag
+                    color={colors[index]}
+                    style={{ textAlign: "center" }}
+                    key={index}
+                  >
+                    {index + 1}级 {item}
+                  </Tag>
+                );
+              })}
+            </Space>
+          </div>
+        </>
+      )}
+      <p style={{ width: "100%", textAlign: "center" }}>
+        每次点击相关操作按钮前, 都需要支付每10卡0.002BNB手续费,
+        单次发布,升级除外
+      </p>
+      {(isMark && markList.length > 0) ? (
+        ""
+      ) : (
+        <>
+          {myCardSelectedList.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                margin: 5,
+                flexWrap: "wrap",
+              }}
+            >
+              <p style={{ color: "var(--semi-color-text-0)" }}>
+                已选中: {myCardSelectedList.length}
+              </p>
+            </div>
+          ) : (
+            ""
+          )}
+          <Table
+            loading={heroLoad}
+            rowKey={(record) => record.token_id}
+            columns={
+              isMobile()
+                ? [
+                    {
+                      title: "我的英雄",
+                      dataIndex: "num",
+                      filters: [
+                        {
+                          text: "合格",
+                          value: true,
+                        },
+                        {
+                          text: "黑奴",
+                          value: false,
+                        },
+                      ],
+                      onFilter: (value, record) => {
+                        let hege = false;
+                        switch (record.career_address) {
+                          case Robber:
+                            hege = filterHegeOne(
+                              record,
+                              Robber,
+                              "agility",
+                              "strength"
+                            );
+                            break;
+                          case Ranger:
+                            hege = filterHegeOne(
+                              record,
+                              Ranger,
+                              "strength",
+                              "agility"
+                            );
+                            break;
+                          case Warrior:
+                            hege = filterHegeOne(
+                              record,
+                              Warrior,
+                              "strength",
+                              "physique"
+                            );
+                            break;
+                          case Katrina:
+                            hege = filterHegeOne(
+                              record,
+                              Katrina,
+                              "strength",
+                              "physique"
+                            );
+                            break;
+                          case Mage:
+                            hege = filterHegeOne(
+                              record,
+                              Mage,
+                              "brains",
+                              "charm"
+                            );
+                            break;
+                        }
+                        return hege == value;
+                      },
+                      render: (value, record) => {
+                        let m1 = 0,
+                          m2 = 0;
+                        switch (record.career_address) {
+                          case Robber:
+                            m1 = record.agility;
+                            m2 = record.strength;
+                            break;
+                          case Warrior:
+                            m1 = record.strength;
+                            m2 = record.physique;
+                            break;
+                          case Katrina:
+                            m1 = record.strength;
+                            m2 = record.physique;
+                            break;
+                          case Mage:
+                            m1 = record.brains;
+                            m2 = record.charm;
+                            break;
+                          case Ranger:
+                            m1 = record.strength;
+                            m2 = record.agility;
+                            break;
+                        }
+                        let hege = false;
+                        switch (record.career_address) {
+                          case Robber:
+                            hege = filterHegeOne(
+                              record,
+                              Robber,
+                              "agility",
+                              "strength"
+                            );
+                            break;
+                          case Ranger:
+                            hege = filterHegeOne(
+                              record,
+                              Ranger,
+                              "strength",
+                              "agility"
+                            );
+                            break;
+                          case Warrior:
+                            hege = filterHegeOne(
+                              record,
+                              Warrior,
+                              "strength",
+                              "physique"
+                            );
+                            break;
+                          case Katrina:
+                            hege = filterHegeOne(
+                              record,
+                              Katrina,
+                              "strength",
+                              "physique"
+                            );
+                            break;
+                          case Mage:
+                            hege = filterHegeOne(
+                              record,
+                              Mage,
+                              "brains",
+                              "charm"
+                            );
+                            break;
+                        }
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              flexDirection: "column",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: "bold",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Space>
+                                <Tag color={hege ? "green" : "grey"}>
+                                  {hege ? "合格" : "黑奴"}
+                                </Tag>
+                                {names[record.career_address]} {record.level}级
+                              </Space>
+                            </span>
+                            <span>
+                              力{record.strength}/敏{record.agility}/体
+                              {record.physique}/意
+                              {record.volition}/智{record.brains}/精
+                              {record.charm}
+                            </span>
+                            <Space style={{ marginTop: 10 }}>
+                              <Button
+                                size="small"
+                                onClick={() => {
+                                  setSaleModal(true);
+                                  setSaleRecord([record]);
+                                }}
+                              >
+                                发布
+                              </Button>
+                              <Button
+                                size="small"
+                                onClick={shengji(record)}
+                                disabled={record.level >= 5}
+                              >
+                                升{record.level < 5 ? record.level + 1 : 5}
+                              </Button>
+                            </Space>
+                          </div>
+                        );
+                      },
+                    },
+                  ]
+                : [
+                    ...MyHeroColums,
+                    {
+                      title: "操作",
+                      render: (text, record) => {
+                        return (
+                          <Space>
+                            <Button
+                              onClick={() => {
+                                setSaleModal(true);
+                                setSaleRecord([record]);
+                              }}
+                            >
+                              发布
+                            </Button>
+                            <Button
+                              onClick={shengji(record)}
+                              disabled={record.level >= 5}
+                            >
+                              升{record.level < 5 ? record.level + 1 : 5}
+                            </Button>
+                          </Space>
+                        );
+                      },
+                    },
+                  ]
+            }
+            dataSource={myHeroList}
+            pagination={{
+              formatPageText: !isMobile(),
+            }}
+            rowSelection={{
+              selectedRowKeys: selectedRowKeys,
+              onChange: (selectedRowKeys, selectedRows) => {
+                setselectedRowKeys(selectedRowKeys);
+                const hei = selectedRows.filter((record) => {
+                  let hege = false;
+                  switch (record.career_address) {
+                    case Robber:
+                      hege =
+                        filterHegeOne(record, Robber, "agility", "strength") &&
+                        record.level > 1;
+                      break;
+                    case Ranger:
+                      hege =
+                        filterHegeOne(record, Ranger, "strength", "agility") &&
+                        record.level > 1;
+                      break;
+                    case Warrior:
+                      hege =
+                        filterHegeOne(
+                          record,
+                          Warrior,
+                          "strength",
+                          "physique"
+                        ) && record.level > 1;
+                      break;
+                    case Katrina:
+                      hege =
+                        filterHegeOne(
+                          record,
+                          Katrina,
+                          "strength",
+                          "physique"
+                        ) && record.level > 1;
+                      break;
+                    case Mage:
+                      hege =
+                        filterHegeOne(record, Mage, "brains", "charm") &&
+                        record.level > 1;
+                      break;
+                  }
+                  return hege === true;
+                });
+                setJianzhi(selectedRows.length > 0 && hei.length === 0);
+                if (
+                  selectedRows.length > 0 &&
+                  selectedRows.length === hei.length
+                ) {
+                  setSecond(hei.length !== 0);
+                } else {
+                  setSecond(false);
+                }
+                setMyCardSelectedList(selectedRows);
+              },
+            }}
+            bordered
+          />
+        </>
+      )}
+      {isMark ? (
+        <Table
+          rowKey={(record) => record.token_id}
+          columns={[
+            {
+              title: "类型",
+              dataIndex: "name",
+            },
+            {
+              title: "名称",
+              dataIndex: "mname",
+            },
+            {
+              title: "价格",
+              dataIndex: "price",
+            },
+            {
+              title: "操作",
+              render: (text, record) => {
+                return (
+                  <Space>
+                    <Button
+                      onClick={() => {
+                        ff(0.002, address, () => {
+                          Notification.info({ content: "正在撤回" });
+                          contracts.saleContractNew.methods
+                            .cancelPlayer(record.orderid)
+                            .send({
+                              from: address,
+                            })
+                            .then((res) => {
+                              Notification.success({ content: "撤回成功" });
+                              getMarkHero();
+                            })
+                            .catch((e) => {
+                              Notification.error({ content: "撤回失败" });
+                            });
+                        });
+                      }}
+                    >
+                      撤销
+                    </Button>
+                  </Space>
+                );
+              },
+            },
+          ]}
+          dataSource={markList}
+          rowSelection={{
+            selectedRowKeys: markListselectedRowKeys,
+            onChange: (selectedRowKeys, selectedRows) => {
+              setmarkListselectedRowKeys(selectedRowKeys);
+              setMarkListSelectedList(selectedRows);
+            },
+          }}
+          bordered
+        />
       ) : (
         ""
       )}
-      <Table
-        loading={heroLoad}
-        rowKey={(record) => record.token_id}
-        columns={
-          isMobile()
-            ? [
-                {
-                  title: "我的英雄",
-                  dataIndex: "num",
-                  filters: [
-                    {
-                      text: "合格",
-                      value: true,
-                    },
-                    {
-                      text: "黑奴",
-                      value: false,
-                    },
-                  ],
-                  onFilter: (value, record) => {
-                    let hege = false;
-                    switch (record.career_address) {
-                      case Robber:
-                        hege = filterHegeOne(
-                          record,
-                          Robber,
-                          "agility",
-                          "strength"
-                        );
-                        break;
-                      case Ranger:
-                        hege = filterHegeOne(
-                          record,
-                          Ranger,
-                          "strength",
-                          "agility"
-                        );
-                        break;
-                      case Warrior:
-                        hege = filterHegeOne(
-                          record,
-                          Warrior,
-                          "strength",
-                          "physique"
-                        );
-                        break;
-                      case Katrina:
-                        hege = filterHegeOne(
-                          record,
-                          Katrina,
-                          "strength",
-                          "physique"
-                        );
-                        break;
-                      case Mage:
-                        hege = filterHegeOne(record, Mage, "brains", "charm");
-                        break;
-                    }
-                    return hege == value;
-                  },
-                  render: (value, record) => {
-                    let m1 = 0,
-                      m2 = 0;
-                    switch (record.career_address) {
-                      case Robber:
-                        m1 = record.agility;
-                        m2 = record.strength;
-                        break;
-                      case Warrior:
-                        m1 = record.strength;
-                        m2 = record.physique;
-                        break;
-                      case Katrina:
-                        m1 = record.strength;
-                        m2 = record.physique;
-                        break;
-                      case Mage:
-                        m1 = record.brains;
-                        m2 = record.charm;
-                        break;
-                      case Ranger:
-                        m1 = record.strength;
-                        m2 = record.agility;
-                        break;
-                    }
-                    let hege = false;
-                    switch (record.career_address) {
-                      case Robber:
-                        hege = filterHegeOne(
-                          record,
-                          Robber,
-                          "agility",
-                          "strength"
-                        );
-                        break;
-                      case Ranger:
-                        hege = filterHegeOne(
-                          record,
-                          Ranger,
-                          "strength",
-                          "agility"
-                        );
-                        break;
-                      case Warrior:
-                        hege = filterHegeOne(
-                          record,
-                          Warrior,
-                          "strength",
-                          "physique"
-                        );
-                        break;
-                      case Katrina:
-                        hege = filterHegeOne(
-                          record,
-                          Katrina,
-                          "strength",
-                          "physique"
-                        );
-                        break;
-                      case Mage:
-                        hege = filterHegeOne(record, Mage, "brains", "charm");
-                        break;
-                    }
-                    return (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontWeight: "bold",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Space>
-                            <Tag color={hege ? "green" : "grey"}>
-                              {hege ? "合格" : "黑奴"}
-                            </Tag>
-                            {names[record.career_address]} {record.level}级
-                          </Space>
-                        </span>
-                        <span>
-                          力{record.strength}/敏{record.agility}/体
-                          {record.physique}/意
-                          {record.volition}/智{record.brains}/精{record.charm}
-                        </span>
-                        <Space style={{ marginTop: 10 }}>
-                          <Button
-                            size="small"
-                            onClick={() => {
-                              setSaleModal(true);
-                              setSaleRecord([record]);
-                            }}
-                          >
-                            发布
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={shengji(record)}
-                            disabled={record.level >= 5}
-                          >
-                            升{record.level < 5 ? record.level + 1 : 5}
-                          </Button>
-                        </Space>
-                      </div>
-                    );
-                  },
-                },
-              ]
-            : [
-                ...MyHeroColums,
-                {
-                  title: "操作",
-                  render: (text, record) => {
-                    return (
-                      <Space>
-                        <Button
-                          onClick={() => {
-                            setSaleModal(true);
-                            setSaleRecord([record]);
-                          }}
-                        >
-                          发布
-                        </Button>
-                        <Button
-                          onClick={shengji(record)}
-                          disabled={record.level >= 5}
-                        >
-                          升{record.level < 5 ? record.level + 1 : 5}
-                        </Button>
-                      </Space>
-                    );
-                  },
-                },
-              ]
-        }
-        dataSource={myHeroList}
-        pagination={{
-          formatPageText: !isMobile(),
-        }}
-        rowSelection={{
-          selectedRowKeys: selectedRowKeys,
-          onChange: (selectedRowKeys, selectedRows) => {
-            setselectedRowKeys(selectedRowKeys);
-            const hei = selectedRows.filter((record) => {
-              let hege = false;
-              switch (record.career_address) {
-                case Robber:
-                  hege =
-                    filterHegeOne(record, Robber, "agility", "strength") &&
-                    record.level > 1;
-                  break;
-                case Ranger:
-                  hege =
-                    filterHegeOne(record, Ranger, "strength", "agility") &&
-                    record.level > 1;
-                  break;
-                case Warrior:
-                  hege =
-                    filterHegeOne(record, Warrior, "strength", "physique") &&
-                    record.level > 1;
-                  break;
-                case Katrina:
-                  hege =
-                    filterHegeOne(record, Katrina, "strength", "physique") &&
-                    record.level > 1;
-                  break;
-                case Mage:
-                  hege =
-                    filterHegeOne(record, Mage, "brains", "charm") &&
-                    record.level > 1;
-                  break;
-              }
-              return hege === true;
-            });
-            setJianzhi(selectedRows.length > 0 && hei.length === 0);
-            if (selectedRows.length > 0 && selectedRows.length === hei.length) {
-              setSecond(hei.length !== 0);
-            } else {
-              setSecond(false);
-            }
-            setMyCardSelectedList(selectedRows);
-          },
-        }}
-        bordered
-      />
       <Modal
         width={isMobile() ? 300 : 448}
         centered={isMobile()}
@@ -902,7 +1125,7 @@ const MyHero = ({ address, contracts }) => {
             Notification.error({ content: "请选择你要发布的卡" });
             return;
           }
-          ff(0.002, address, () => {
+          ff(0.002 * saleRecord.length, address, () => {
             saleRecord.forEach((record) => {
               const name = `力${record.strength}/敏${record.agility}/体${record.physique}/意${record.volition}/智${record.brains}/精${record.charm}`;
               contracts.saleContractNew.methods

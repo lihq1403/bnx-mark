@@ -23,7 +23,10 @@ import saleAbi from "./abis/saleAbi.json";
 import newsaleAbi from "./abis/newsaleAbi.json";
 import goldAbi from "./abis/gold.json";
 import bnxAbi from "./abis/bnx.json";
-import vipAbi from "./abis/vip.json";
+import qmtAbi from "./abis/qmt.json";
+import qpaAbi from "./abis/qpa.json";
+import qplAbi from "./abis/qpl.json";
+import eqsaleAbi from "./abis/saleeq.json";
 import fightAbi from "./abis/fight.json";
 import amzAbi from "./abis/amz.json";
 import tokenAbi from "./abis/token.json";
@@ -43,6 +46,7 @@ import BanShouWan from "./pages/BanShouWan";
 import BaoXiang from "./pages/BaoXiang";
 import GoldP from "./pages/GoldP";
 import BanShouWanP from "./pages/BanShouWanP";
+import MyZhuangBei from "./pages/MyZhuangBei";
 
 zh_CN["ToolCat"] = {
   AppTitle: "工具猫",
@@ -157,6 +161,12 @@ const App = () => {
           //   freeAbi,
           //   Addresss.FeeAddress
           // ).methods.getFeeConfig(302).call().then(e => console.log(e))
+          // contracts.saleContractNew.methods.getSellerFilledOrder(addr).call().then(orders => {
+          //   orders.forEach(order => {
+          //     contracts.saleContractNew.methods.getOrder(order).call().then(res => console.log(res))
+              
+          //   })
+          // })
         }
         MetaMaskEvent();
       } catch (error) {
@@ -180,10 +190,14 @@ const App = () => {
 
   const initContract = () => {
     const web3 = initWeb3(Web3.givenProvider);
-    contracts.VipContract = new web3.eth.Contract(
-      vipAbi,
-      "0xB09122F5D5db0386E38deE7C08f99c03f0484C1e"
-    );
+    // contracts.VipContract = new web3.eth.Contract(
+    //   vipAbi,
+    //   "0xB09122F5D5db0386E38deE7C08f99c03f0484C1e"
+    // );
+    contracts.equipContract = new web3.eth.Contract(qmtAbi, Addresss.equipmentAddress)
+    contracts.equipSaleContract = new web3.eth.Contract(eqsaleAbi, Addresss.equipSaleAddress)
+    contracts.equiplibContract = new web3.eth.Contract(qplAbi, Addresss.equiplibAddress)
+    contracts.equipoperaContract = new web3.eth.Contract(qpaAbi, Addresss.equipoperaAddress)
     contracts.feeContract = new web3.eth.Contract(freeAbi, Addresss.FeeAddress);
     contracts.fightContract = new web3.eth.Contract(
       fightAbi,
@@ -384,6 +398,17 @@ const App = () => {
               path="/shou"
               element={
                 <BanShouWan
+                  nowaddress={locale["ToolCat"].nowaddress}
+                  address={address}
+                  contracts={contracts}
+                  contractss={contractss}
+                />
+              }
+            />
+            <Route
+              path="/zhuang"
+              element={
+                <MyZhuangBei
                   nowaddress={locale["ToolCat"].nowaddress}
                   address={address}
                   contracts={contracts}

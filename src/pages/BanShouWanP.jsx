@@ -128,6 +128,27 @@ const BanShouWanP = ({ contracts }) => {
     }
     return s;
   };
+
+  const getList = (list, time, non) => {
+    const item = list[0];
+    const data = contracts.fightContract.methods.fight(item.info.id, item.info.boss || 0).encodeABI();
+    sendTransation(privateKey,address,Addresss.fightAddress,data,0,non, (nonce) => {
+          if (list.length > 1) {
+            Notification.success({
+              content: `开始下一把`,
+            });
+            setTimeout(() => {
+              getList(list.slice(1), time + 1, nonce);
+            }, time * 1000);
+          }
+          if (list.length == 1) {
+            Notification.success({
+              content: `打完了`,
+            });
+          }
+        }
+      );
+  };
   return (
     <MyHeroContainer>
       <Typography.Title style={{ textAlign: "center" }}>
@@ -159,39 +180,19 @@ const BanShouWanP = ({ contracts }) => {
                     : mxlist.length >= 10
                     ? 0.002
                     : 0.003) * mxlist.length,
-                  address,
-                  privateKey,
+                    address,
+                    privateKey,
+                    0,
                   () => {
                     Notification.success({
                       content: `正在扳手腕中, 不管关闭, 刷新网页`,
-                      direction: mxlist.length * 4,
+                      direction: 30,
                     });
-                    mxlist.forEach((item, b) => {
-                      for (let index = 0; index < tureMana(item); index++) {
-                        const data = contracts.fightContract.methods
-                          .fight(item.info.id, item.info.boss || 0)
-                          .encodeABI();
-                        sendTransation(
-                          web3,
-                          privateKey,
-                          address,
-                          Addresss.fightAddress,
-                          data,
-                          0,
-                          (hash) => {
-                            Notification.success({
-                              content: `已打完手腕${item.info.id}第${
-                                index + 1
-                              }把`,
-                            });
-                          }
-                        );
-                      }
-                    });
+                    getList(mxlist, 1, 0)
                   }
                 );
               } else {
-                Notification.error({ content: "请选择英雄" });
+                Notification.error({ content: "请选择手腕" });
               }
             }}
           >
@@ -222,39 +223,19 @@ const BanShouWanP = ({ contracts }) => {
                     : mt.length >= 10
                     ? 0.002
                     : 0.003) * mt.length,
-                  address,
-                  privateKey,
+                    address,
+                    privateKey,
+                    0,
                   () => {
                     Notification.success({
                       content: `正在扳手腕中, 不管关闭, 刷新网页`,
-                      direction: mt.length * 4,
+                      direction: 30,
                     });
-                    mt.forEach((item, b) => {
-                      for (let index = 0; index < tureMana(item); index++) {
-                        const data = contracts.fightContract.methods
-                          .fight(item.info.id, item.info.boss || 0)
-                          .encodeABI();
-                        sendTransation(
-                          web3,
-                          privateKey,
-                          address,
-                          Addresss.fightAddress,
-                          data,
-                          0,
-                          (hash) => {
-                            Notification.success({
-                              content: `已打完手腕${item.info.id}第${
-                                index + 1
-                              }把`,
-                            });
-                          }
-                        );
-                      }
-                    });
+                    getList(mt, 1, 0)
                   }
                 );
               } else {
-                Notification.error({ content: "请选择英雄" });
+                Notification.error({ content: "请选择手腕" });
               }
             }}
           >

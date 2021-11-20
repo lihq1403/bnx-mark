@@ -9,6 +9,7 @@ import {
   IconUnderline,
   IconLikeThumb,
   IconInbox,
+  IconTopbuzzLogo
 } from "@douyinfe/semi-icons";
 import {
   Layout,
@@ -77,6 +78,11 @@ const Head = ({ menu, light, dark, title, Language, toogleLanguage }) => {
                     <Link to="/hero">
                       <Dropdown.Item icon={<IconUserCircle />}>
                         {menu.hero}
+                      </Dropdown.Item>
+                    </Link>
+                    <Link to="/zhuang">
+                      <Dropdown.Item icon={<IconTopbuzzLogo />}>
+                        {"我的装备"}
                       </Dropdown.Item>
                     </Link>
                     <Link to="/gold">
@@ -170,6 +176,30 @@ const Head = ({ menu, light, dark, title, Language, toogleLanguage }) => {
                     text={isMobile() ? "" : menu.hero}
                     icon={
                       <IconUserCircle
+                        size="large"
+                        style={{
+                          color: "var(--semi-color-text-0)",
+                        }}
+                      />
+                    }
+                    style={{
+                      color: "var(--semi-color-text-0)",
+                    }}
+                  />
+                </Link>
+              </Popover>
+              <Popover
+                arrowPointAtCenter
+                showArrow
+                trigger="hover"
+                content={'我的装备'}
+              >
+                <Link to="/zhuang">
+                  <Nav.Item
+                    itemKey="hero"
+                    text={isMobile() ? "" : "我的装备"}
+                    icon={
+                      <IconTopbuzzLogo
                         size="large"
                         style={{
                           color: "var(--semi-color-text-0)",

@@ -132,11 +132,11 @@ const BanShouWan = ({ address, contracts }) => {
       <Typography.Title style={{ textAlign: "center" }}>
         扳手腕
       </Typography.Title>
-      {/* <div style={{display: 'flex', justifyContent: 'center'}}>
+      <div style={{display: 'flex', justifyContent: 'center'}}>
         <Link to='/private_key_shou'>
           <Typography.Text>私钥方式入口</Typography.Text>
         </Link>
-      </div> */}
+      </div>
       <NowAddress address={address} />
       <div
         style={{
