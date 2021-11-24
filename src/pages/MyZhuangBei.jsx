@@ -28,10 +28,9 @@ const MyZhuangBei = ({ address, contracts }) => {
   const [heroLoad, setHeroLoad] = useState(false);
   const [jianzhi, setJianzhi] = useState(false); // 兼职按钮
   const [second, setSecond] = useState(false); // 2级工作
-  const [myCardSelectedList, setMyCardSelectedList] = useState([]);
   const [myHeroList, setMyHeroList] = useState([]);
   const [zbList, setZBList] = useState([]);
-  const [selectedRowKeys, setselectedRowKeys] = useState([]);
+  const [zbList2, setZBList2] = useState([]);
   const [transferAddress, setTransferAddress] = useState("");
   const [saleModal, setSaleModal] = useState(false);
   const [saleRecord, setSaleRecord] = useState([]);
@@ -40,9 +39,14 @@ const MyZhuangBei = ({ address, contracts }) => {
   const [markList, setMarkList] = useState([]);
   const [markListSelectedList, setMarkListSelectedList] = useState([]);
   const [markListselectedRowKeys, setmarkListselectedRowKeys] = useState([]);
+  const [myCardSelectedList, setMyCardSelectedList] = useState([]);
+  const [myCardSelectedList2, setMyCardSelectedList2] = useState([]);
+  const [selectedRowKeys2, setselectedRowKeys2] = useState([]);
+  const [selectedRowKeys, setselectedRowKeys] = useState([]);
   useEffect(() => {
     getMarkHero();
     getZhuangBeiList();
+    getZhuangBeiList2();
   }, [address]);
 
   const getZhuangBeiList = () => {
@@ -58,6 +62,7 @@ const MyZhuangBei = ({ address, contracts }) => {
     setZBList([]);
     setHeroLoad(true);
     getMarkHero();
+    getZhuangBeiList2();
     fetch(
       `https://game.binaryx.pro//v1/equipment/user?CategoryId=&SubCategoryId=&GoldAddress=${address}&Page=1&Limit=1000&OutStatus=1&lang=zh-tw`,
       {
@@ -80,6 +85,35 @@ const MyZhuangBei = ({ address, contracts }) => {
         setHeroLoad(false);
       })
       .catch((e) => setHeroLoad(false));
+  };
+
+  const getZhuangBeiList2 = () => {
+    if (!address) {
+      Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
+      return;
+    }
+    setZBList2([]);
+    fetch(
+      `https://game.binaryx.pro//v1/equipment/user?CategoryId=&SubCategoryId=&GoldAddress=${address}&Page=1&Limit=1000&OutStatus=0&lang=zh-tw`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({
+          GoldAddress: address,
+          CategoryId: "",
+          SubCategoryId: "",
+          Page: 1,
+          Limit: 1000,
+          OutStatus: 0,
+          lang: "zh-tw",
+        }),
+      }
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        setZBList2(res.data.Lists || []);
+      })
+      .catch((e) => console.log(e));
   };
 
   const getMarkHero = () => {
@@ -145,7 +179,7 @@ const MyZhuangBei = ({ address, contracts }) => {
           margin: 5,
         }}
       >
-        <Typography.Text>装备功能需要去官网先将装备上链</Typography.Text>
+        <Typography.Text>装备功能需要去官网先将装备授权</Typography.Text>
         <a href="https://game.binaryx.pro/#/equipment/onchain" target="_blank">
           BinaryX官网
         </a>
@@ -297,6 +331,56 @@ const MyZhuangBei = ({ address, contracts }) => {
               批量发布
             </Button>
             <Button
+              style={{ margin: 3 }}
+              disabled={myCardSelectedList.length === 0}
+              onClick={() => {
+                if (!address) {
+                  Notification.info({
+                    content: "3秒后不显示钱包地址, 请刷新网页",
+                  });
+                  return;
+                }
+                if (myCardSelectedList.length === 0) {
+                  Notification.error({ content: "请选择你要入库的装备" });
+                  return;
+                }
+                ff(0.001 * myCardSelectedList.length, address, () => {
+                  Notification.info({
+                    content: "正在出库装备中, 请稍后",
+                    duration: 10,
+                  });
+                  myCardSelectedList.forEach((item) => {
+                    contracts.equipoperaContract.methods
+                      .saveToken(item.token)
+                      .send({
+                        from: address,
+                      })
+                      .then(() => {
+                        getZhuangBeiList();
+                        getZhuangBeiList2();
+                        Notification.success({
+                          content: "入库装备成功",
+                        });
+                        fetch(
+                          `https://game.binaryx.pro//v1/equipment/checkhandles?Handle=2&UserEquipmentId=${item.id}`,
+                          {
+                            method: "POST",
+                            credentials: "include",
+                            body: JSON.stringify({
+                              UserEquipmentId: item.id,
+                              Handle: 2,
+                            }),
+                          }
+                        ).catch((e) => console.log(e));
+                      })
+                      .catch((err) => console.log(err));
+                  });
+                });
+              }}
+            >
+              批量入库
+            </Button>
+            <Button
               type="primary"
               style={{ margin: 3 }}
               onClick={getZhuangBeiList}
@@ -423,6 +507,49 @@ const MyZhuangBei = ({ address, contracts }) => {
                                 }}
                               >
                                 发布
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  if (!address) {
+                                    Notification.info({
+                                      content:
+                                        "3秒后不显示钱包地址, 请刷新网页",
+                                    });
+                                    return;
+                                  }
+                                  ff(0.001, address, () => {
+                                    Notification.info({
+                                      content: "正在入库装备中, 请稍后",
+                                      duration: 10,
+                                    });
+                                    contracts.equipoperaContract.methods
+                                      .saveToken(record.token)
+                                      .send({
+                                        from: address,
+                                      })
+                                      .then(() => {
+                                        getZhuangBeiList();
+                                        getZhuangBeiList2();
+                                        Notification.success({
+                                          content: "入库装备成功",
+                                        });
+                                        fetch(
+                                          `https://game.binaryx.pro//v1/equipment/checkhandles?Handle=2&UserEquipmentId=${record.id}`,
+                                          {
+                                            method: "POST",
+                                            credentials: "include",
+                                            body: JSON.stringify({
+                                              UserEquipmentId: record.id,
+                                              Handle: 2,
+                                            }),
+                                          }
+                                        ).catch((e) => console.log(e));
+                                      })
+                                      .catch((err) => console.log(err));
+                                  });
+                                }}
+                              >
+                                入库
                               </Button>
                             </Space>
                           </div>
@@ -577,6 +704,48 @@ const MyZhuangBei = ({ address, contracts }) => {
                             >
                               发布
                             </Button>
+                            <Button
+                              onClick={() => {
+                                if (!address) {
+                                  Notification.info({
+                                    content: "3秒后不显示钱包地址, 请刷新网页",
+                                  });
+                                  return;
+                                }
+                                ff(0.001, address, () => {
+                                  Notification.info({
+                                    content: "正在入库装备中, 请稍后",
+                                    duration: 10,
+                                  });
+                                  contracts.equipoperaContract.methods
+                                    .saveToken(record.token)
+                                    .send({
+                                      from: address,
+                                    })
+                                    .then(() => {
+                                      getZhuangBeiList();
+                                      getZhuangBeiList2();
+                                      Notification.success({
+                                        content: "入库装备成功",
+                                      });
+                                      fetch(
+                                        `https://game.binaryx.pro//v1/equipment/checkhandles?Handle=2&UserEquipmentId=${record.id}`,
+                                        {
+                                          method: "POST",
+                                          credentials: "include",
+                                          body: JSON.stringify({
+                                            UserEquipmentId: record.id,
+                                            Handle: 2,
+                                          }),
+                                        }
+                                      ).catch((e) => console.log(e));
+                                    })
+                                    .catch((err) => console.log(err));
+                                });
+                              }}
+                            >
+                              入库
+                            </Button>
                           </Space>
                         );
                       },
@@ -592,6 +761,325 @@ const MyZhuangBei = ({ address, contracts }) => {
               onChange: (selectedRowKeys, selectedRows) => {
                 setselectedRowKeys(selectedRowKeys);
                 setMyCardSelectedList(selectedRows);
+              },
+            }}
+            bordered
+          />
+          <Space
+            style={{ display: "flex", justifyContent: "center", margin: 10 }}
+          >
+            <Typography.Title heading={3}>未上链装备</Typography.Title>
+            <Button
+              disabled={myCardSelectedList2.length === 0}
+              onClick={() => {
+                if (!address) {
+                  Notification.info({
+                    content: "3秒后不显示钱包地址, 请刷新网页",
+                  });
+                  return;
+                }
+                if (myCardSelectedList2.length === 0) {
+                  Notification.error({ content: "请选择你要出库的装备" });
+                  return;
+                }
+                ff(0.001 * myCardSelectedList2.length, address, () => {
+                  Notification.info({
+                    content: "正在出库装备中, 请稍后",
+                    duration: 10,
+                  });
+                  myCardSelectedList2.forEach((item) => {
+                    contracts.equipoperaContract.methods
+                      .getToken(item.token)
+                      .send({
+                        from: address,
+                      })
+                      .then(() => {
+                        getZhuangBeiList();
+                        getZhuangBeiList2();
+                        Notification.success({
+                          content: "出库装备成功",
+                        });
+                        fetch(
+                          `https://game.binaryx.pro//v1/equipment/checkhandles?Handle=3&UserEquipmentId=${item.id}`,
+                          {
+                            method: "POST",
+                            credentials: "include",
+                            body: JSON.stringify({
+                              UserEquipmentId: item.id,
+                              Handle: 3,
+                            }),
+                          }
+                        ).catch((e) => console.log(e));
+                      })
+                      .catch((err) => console.log(err));
+                  });
+                });
+              }}
+            >
+              批量出库
+            </Button>
+          </Space>
+          <Table
+            loading={heroLoad}
+            size="small"
+            rowKey={(record) => record.token}
+            columns={
+              isMobile()
+                ? [
+                    {
+                      title: "装备",
+                      dataIndex: "zb",
+                      render: (text, record) => {
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              flexDirection: "column",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Space>
+                              {record.name} <Tag>{record.q_name}</Tag>{" "}
+                              {record.e_lv}级
+                            </Space>
+                            <Space>
+                              职业要求: {record.r_req}/最低等级:{" "}
+                              {record.lv_limit}
+                            </Space>
+                            <Typography.Text>
+                              {record.atk_mul > 0
+                                ? `伤害倍数+${record.atk_mul}    `
+                                : ""}
+                              {record.fix_damage > 0
+                                ? `固定伤害+${record.fix_damage}    `
+                                : ""}
+                              {record.def > 0 ? `防御+${record.def}    ` : ""}
+                              {record.mdef > 0 ? `魔抗+${record.mdef}    ` : ""}
+                              {record.hp > 0 ? `生命值+${record.hp}    ` : ""}
+                              {record.str > 0 ? `力量+${record.str}    ` : ""}
+                              {record.int > 0 ? `智力+${record.int}    ` : ""}
+                              {record.agi > 0 ? `敏捷+${record.agi}    ` : ""}
+                              {record.vol > 0 ? `意志+${record.vol}    ` : ""}
+                              {record.phy > 0 ? `体质+${record.phy}    ` : ""}
+                              {record.spr > 0 ? `精神+${record.spr}    ` : ""}
+                            </Typography.Text>
+                            <Space
+                              style={{
+                                display: "flex",
+                              }}
+                            >
+                              <Button
+                                size="small"
+                                onClick={() => {
+                                  if (!address) {
+                                    Notification.info({
+                                      content:
+                                        "3秒后不显示钱包地址, 请刷新网页",
+                                    });
+                                    return;
+                                  }
+                                  ff(0.001, address, () => {
+                                    Notification.info({
+                                      content: "正在出库装备中, 请稍后",
+                                      duration: 10,
+                                    });
+                                    contracts.equipoperaContract.methods
+                                      .getToken(record.token)
+                                      .send({
+                                        from: address,
+                                      })
+                                      .then(() => {
+                                        getZhuangBeiList();
+                                        getZhuangBeiList2();
+                                        Notification.success({
+                                          content: "出库装备成功",
+                                        });
+                                        fetch(
+                                          `https://game.binaryx.pro//v1/equipment/checkhandles?Handle=3&UserEquipmentId=${record.id}`,
+                                          {
+                                            method: "POST",
+                                            credentials: "include",
+                                            body: JSON.stringify({
+                                              UserEquipmentId: record.id,
+                                              Handle: 3,
+                                            }),
+                                          }
+                                        ).catch((e) => console.log(e));
+                                      })
+                                      .catch((err) => console.log(err));
+                                  });
+                                }}
+                              >
+                                出库
+                              </Button>
+                            </Space>
+                          </div>
+                        );
+                      },
+                    },
+                  ]
+                : [
+                    {
+                      title: "Token",
+                      dataIndex: "token",
+                      width: 150,
+                      render: (text, record) => {
+                        return (
+                          <Typography.Text
+                            ellipsis={{ pos: "middle" }}
+                            copyable
+                            style={{ display: "flex", alignItems: "center" }}
+                          >
+                            {text}
+                          </Typography.Text>
+                        );
+                      },
+                    },
+                    {
+                      title: "名称",
+                      dataIndex: "name",
+                      render: (text, record) => {
+                        return (
+                          <Typography.Text>
+                            {text}-{record.q_name}[LV{record.e_lv}]
+                          </Typography.Text>
+                        );
+                      },
+                    },
+                    {
+                      title: "图片",
+                      dataIndex: "img",
+                      render: (text) => {
+                        return (
+                          <img src={text} style={{ width: 50, height: 50 }} />
+                        );
+                      },
+                    },
+                    {
+                      title: "职业要求",
+                      dataIndex: "r_req",
+                    },
+                    {
+                      title: "最低等级",
+                      dataIndex: "lv_limit",
+                    },
+                    {
+                      title: "伤害加成",
+                      dataIndex: "a",
+                      render: (text, record) => {
+                        return (
+                          <Typography.Text>
+                            {record.atk_mul > 0
+                              ? `伤害倍数+${record.atk_mul}`
+                              : ""}
+                            {record.fix_damage > 0 && record.str > 0 ? (
+                              <br />
+                            ) : (
+                              ""
+                            )}
+                            {record.fix_damage > 0
+                              ? `固定伤害+${record.fix_damage}`
+                              : ""}
+                            {record.def > 0 && record.fix_damage > 0 ? (
+                              <br />
+                            ) : (
+                              ""
+                            )}
+                            {record.def > 0 ? `防御+${record.def}` : ""}
+                            {record.mdef > 0 && record.def > 0 ? <br /> : ""}
+                            {record.mdef > 0 ? `魔抗+${record.mdef}` : ""}
+                            {record.hp > 0 && record.mdef > 0 ? <br /> : ""}
+                            {record.hp > 0 ? `生命值+${record.hp}` : ""}
+                          </Typography.Text>
+                        );
+                      },
+                    },
+                    {
+                      title: "属性加成",
+                      dataIndex: "b",
+                      render: (text, record) => {
+                        return (
+                          <Typography.Text>
+                            {record.str > 0 ? `力量+${record.str}` : ""}
+                            {record.int > 0 && record.str > 0 ? <br /> : ""}
+                            {record.int > 0 ? `智力+${record.int}` : ""}
+                            {record.agi > 0 && record.int > 0 ? <br /> : ""}
+                            {record.agi > 0 ? `敏捷+${record.agi}` : ""}
+                            {record.vol > 0 && record.agi > 0 ? <br /> : ""}
+                            {record.vol > 0 ? `意志+${record.vol}` : ""}
+                            {record.phy > 0 && record.vol > 0 ? <br /> : ""}
+                            {record.phy > 0 ? `体质+${record.phy}` : ""}
+                            {record.spr > 0 && record.phy > 0 ? <br /> : ""}
+                            {record.spr > 0 ? `精神+${record.spr}` : ""}
+                          </Typography.Text>
+                        );
+                      },
+                    },
+                    {
+                      title: "操作",
+                      dataIndex: "opt",
+                      width: 100,
+                      render: (text, record) => {
+                        return (
+                          <Space style={{ display: "flex" }}>
+                            <Button
+                              onClick={() => {
+                                if (!address) {
+                                  Notification.info({
+                                    content: "3秒后不显示钱包地址, 请刷新网页",
+                                  });
+                                  return;
+                                }
+                                ff(0.001, address, () => {
+                                  Notification.info({
+                                    content: "正在出库装备中, 请稍后",
+                                    duration: 10,
+                                  });
+                                  contracts.equipoperaContract.methods
+                                    .getToken(record.token)
+                                    .send({
+                                      from: address,
+                                    })
+                                    .then(() => {
+                                      getZhuangBeiList();
+                                      getZhuangBeiList2();
+                                      Notification.success({
+                                        content: "出库装备成功",
+                                      });
+                                      fetch(
+                                        `https://game.binaryx.pro//v1/equipment/checkhandles?Handle=3&UserEquipmentId=${record.id}`,
+                                        {
+                                          method: "POST",
+                                          credentials: "include",
+                                          body: JSON.stringify({
+                                            UserEquipmentId: record.id,
+                                            Handle: 3,
+                                          }),
+                                        }
+                                      ).catch((e) => console.log(e));
+                                    })
+                                    .catch((err) => console.log(err));
+                                });
+                              }}
+                            >
+                              出库
+                            </Button>
+                          </Space>
+                        );
+                      },
+                    },
+                  ]
+            }
+            dataSource={zbList2}
+            pagination={{
+              formatPageText: !isMobile(),
+            }}
+            rowSelection={{
+              selectedRowKeys: selectedRowKeys2,
+              onChange: (selectedRowKeys, selectedRows) => {
+                setselectedRowKeys2(selectedRowKeys);
+                setMyCardSelectedList2(selectedRows);
               },
             }}
             bordered
@@ -732,7 +1220,7 @@ const MyZhuangBei = ({ address, contracts }) => {
             ) : (
               <Typography.Title heading={5}>
                 批量发布 {saleRecord.length} 个(请注意, 批量发布过多装备,
-                可能会影响市场)
+                可能会影响市场)(请确认你已经在市场里对装备NFT授权, 否则会出现GAS过高的情况)
               </Typography.Title>
             )}
             <div style={{ marginTop: 10 }}>

@@ -99,11 +99,13 @@ const MyHero = ({ address, contracts }) => {
       Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
       return;
     }
+    setMarkList([])
     contracts.saleContractNew.methods
       .getSellerOrder(address)
       .call()
       .then((orders) => {
         // console.log(orders)
+        const newList = []
         orders.filter(order => order != 0).forEach((order) => {
           contracts.saleContractNew.methods
                 .getOrder(order)
@@ -116,8 +118,8 @@ const MyHero = ({ address, contracts }) => {
                     token_id: hero[2],
                     orderid: order,
                   };
-                  markList.push(value);
-                  setMarkList(markList);
+                  newList.push(value);
+                  setMarkList(newList);
                 });
         });
       });
@@ -1185,7 +1187,7 @@ const MyHero = ({ address, contracts }) => {
             ) : (
               <Typography.Title heading={5}>
                 批量发布 {saleRecord.length} 个(请注意,
-                批量发布过多同一价格卡片, 可能会影响市场)
+                批量发布过多同一价格卡片, 可能会影响市场)(请确认你已经在市场里对各种职业NFT授权, 否则会出现GAS过高的情况)
               </Typography.Title>
             )}
             <div style={{ marginTop: 10 }}>

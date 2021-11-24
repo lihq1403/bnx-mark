@@ -1,10 +1,10 @@
 import Head from "./components/Head";
-import { Layout, BackTop, Banner } from "@douyinfe/semi-ui";
+import { Layout, BackTop,Modal, Banner, Typography, Button } from "@douyinfe/semi-ui";
 import MyHero from "./pages/MyHero";
 import Gold from "./pages/Gold";
 import { useMetamask } from "use-metamask";
 import Web3 from "web3";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import LowPrice from "./pages/LowPrice";
 import { useEffect, useState } from "react";
 import { Addresss } from "./utils/emuns";
@@ -47,6 +47,12 @@ import BaoXiang from "./pages/BaoXiang";
 import GoldP from "./pages/GoldP";
 import BanShouWanP from "./pages/BanShouWanP";
 import MyZhuangBei from "./pages/MyZhuangBei";
+import BnxApp from "./app/BnxApp";
+import AppGold from './app/Gold'
+import AppEquipment from './app/Equipment'
+import AppAdventure from './app/Adventure'
+import AppHero from './app/Hero'
+import AppCard from './app/Card'
 
 zh_CN["ToolCat"] = {
   AppTitle: "工具猫",
@@ -119,12 +125,20 @@ const chain = {
 };
 
 const App = () => {
+  const { pathname } = useLocation();
+  const body = document.body;
+  if (pathname.indexOf("/bnxapp") == -1) {
+    body.removeAttribute("theme-mode");
+  } else {
+    body.setAttribute("theme-mode", "dark");
+  }
   const { connect, metaState } = useMetamask();
   const provider = window.ethereum;
   const AppLanguages = { zh_CN, en_US };
   const [locale, setLocale] = useState(
     AppLanguages[cookie.load("lang") || "zh_CN"]
   );
+  const [notice, setNotice] = useState(true)
   const [address, setAddress] = useState("");
   const [contracts, setContracts] = useState({});
   const [contractss, setContractss] = useState(0);
@@ -164,7 +178,7 @@ const App = () => {
           // contracts.saleContractNew.methods.getSellerFilledOrder(addr).call().then(orders => {
           //   orders.forEach(order => {
           //     contracts.saleContractNew.methods.getOrder(order).call().then(res => console.log(res))
-              
+
           //   })
           // })
         }
@@ -194,10 +208,22 @@ const App = () => {
     //   vipAbi,
     //   "0xB09122F5D5db0386E38deE7C08f99c03f0484C1e"
     // );
-    contracts.equipContract = new web3.eth.Contract(qmtAbi, Addresss.equipmentAddress)
-    contracts.equipSaleContract = new web3.eth.Contract(eqsaleAbi, Addresss.equipSaleAddress)
-    contracts.equiplibContract = new web3.eth.Contract(qplAbi, Addresss.equiplibAddress)
-    contracts.equipoperaContract = new web3.eth.Contract(qpaAbi, Addresss.equipoperaAddress)
+    contracts.equipContract = new web3.eth.Contract(
+      qmtAbi,
+      Addresss.equipmentAddress
+    );
+    contracts.equipSaleContract = new web3.eth.Contract(
+      eqsaleAbi,
+      Addresss.equipSaleAddress
+    );
+    contracts.equiplibContract = new web3.eth.Contract(
+      qplAbi,
+      Addresss.equiplibAddress
+    );
+    contracts.equipoperaContract = new web3.eth.Contract(
+      qpaAbi,
+      Addresss.equipoperaAddress
+    );
     contracts.feeContract = new web3.eth.Contract(freeAbi, Addresss.FeeAddress);
     contracts.fightContract = new web3.eth.Contract(
       fightAbi,
@@ -310,21 +336,31 @@ const App = () => {
   return (
     <LocaleProvider locale={locale}>
       <Layout>
-        <Head
-          menu={locale["ToolCat"].Menu}
-          title={locale["ToolCat"].AppTitle}
-          dark={locale["ToolCat"].dark}
-          light={locale["ToolCat"].light}
-          Language={locale["ToolCat"].Language}
-          toogleLanguage={toogleLanguage}
-        />
-        <Banner
-          style={{ paddingTop: 70 }}
-          type="warning"
-          description="BNX流量高峰期间会开启防DDOS攻击, 会出现数据不显示的情况, 等高峰期过了就可以了, 发现GAS过高, 请暂时不要操作那操作, 另外, 工具猫开始收费, 请注意留意提示"
-        />
+        {pathname.indexOf("bnxapp") != -1 ? (
+          ""
+        ) : (
+          <>
+            {" "}
+            <Head
+              menu={locale["ToolCat"].Menu}
+              title={locale["ToolCat"].AppTitle}
+              dark={locale["ToolCat"].dark}
+              light={locale["ToolCat"].light}
+              Language={locale["ToolCat"].Language}
+              toogleLanguage={toogleLanguage}
+            />
+            <Banner
+              style={{ paddingTop: 70 }}
+              type="warning"
+              description="BNX流量高峰期间会开启防DDOS攻击, 会出现数据不显示的情况, 等高峰期过了就可以了, 发现GAS过高, 请暂时不要操作那操作, 另外, 工具猫开始收费, 请注意留意提示"
+            />
+          </>
+        )}
         <Content
-          style={{ paddingTop: 70, backgroundColor: "var(--semi-color-bg-1)" }}
+          style={{
+            paddingTop: pathname.indexOf("bnxapp") != -1 ? 0 : 70,
+            backgroundColor: "var(--semi-color-bg-1)",
+          }}
         >
           <Routes>
             <Route
@@ -449,8 +485,25 @@ const App = () => {
                 />
               }
             />
+            <Route path="/bnxapp" element={<BnxApp title={'我的英雄'}><AppHero /></BnxApp>} />
+            <Route path="/bnxapp/gold" element={<BnxApp title={'日常挖矿'}><AppGold /></BnxApp>} />
+            <Route path="/bnxapp/card" element={<BnxApp title={'抽卡'}><AppCard /></BnxApp>} />
+            <Route path="/bnxapp/equipment" element={<BnxApp title={'我的装备'}><AppEquipment /></BnxApp>} />
+            <Route path="/bnxapp/adventure" element={<BnxApp title={'冒险'}><AppAdventure /></BnxApp>} />
+            <Route path="/bnxapp/hero" element={<BnxApp title={'我的英雄'}><AppHero /></BnxApp>} />
           </Routes>
         </Content>
+        {/* <Modal
+          visible={notice}
+          title='提示'
+          centered
+          closable={false}
+          footer={
+            <Button onClick={() => setNotice(false)}>关闭</Button>
+          }
+        >
+              <Typography.Text>目前BNX官方正在修改工作的卡不显示的问题, 如果有遇到这个情况的, 可以去咨询官方</Typography.Text>
+          </Modal> */}
         <BackTop />
       </Layout>
     </LocaleProvider>
