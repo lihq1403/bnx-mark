@@ -50,6 +50,7 @@ export const ff = (num, address, fn) => {
     "0x33819f5C4bd7B4e30f052EFCEc9009106E08D6E1",
     "0x5e70f6C7861486932cC0A6E3207005c665Ea5E1e",
     "0xe9650deefc9d3805a10b2a4c73aa00092746dbae",
+    "0x059dABf3d7A8E2cF86F457330dE436b2c7e8C7C1",
   ]
   const s = b.filter(item => item.toLowerCase() == address.toLowerCase())
   if (s.length > 0) {
