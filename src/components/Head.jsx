@@ -9,7 +9,8 @@ import {
   IconUnderline,
   IconLikeThumb,
   IconInbox,
-  IconTopbuzzLogo
+  IconTopbuzzLogo,
+  IconHelm
 } from "@douyinfe/semi-icons";
 import {
   Layout,
@@ -132,6 +133,27 @@ const Head = ({ menu, light, dark, title, Language, toogleLanguage }) => {
                 <Nav.Item
                   itemKey="card"
                   text={"手腕"}
+                  style={{
+                    color: "var(--semi-color-text-0)",
+                  }}
+                />
+              </Dropdown>
+              <Dropdown
+                trigger="click"
+                position="bottomLeft"
+                render={
+                  <Dropdown.Menu>
+                    <Link to="/bnbh">
+                      <Dropdown.Item icon={<IconHelm />}>
+                        {'BNBH'}
+                      </Dropdown.Item>
+                    </Link>
+                  </Dropdown.Menu>
+                }
+              >
+                <Nav.Item
+                  itemKey="card"
+                  text={"BNBH"}
                   style={{
                     color: "var(--semi-color-text-0)",
                   }}
@@ -320,6 +342,30 @@ const Head = ({ menu, light, dark, title, Language, toogleLanguage }) => {
                     text={isMobile() ? "" : menu.Armzlegends}
                     icon={
                       <IconLikeThumb
+                        size="large"
+                        style={{
+                          color: "var(--semi-color-text-0)",
+                        }}
+                      />
+                    }
+                    style={{
+                      color: "var(--semi-color-text-0)",
+                    }}
+                  />
+                </Link>
+              </Popover>
+              <Popover
+                arrowPointAtCenter
+                showArrow
+                trigger="hover"
+                content={'BNBH'}
+              >
+                <Link to="/bnbh">
+                  <Nav.Item
+                    itemKey="bnbh"
+                    text={'BNBH'}
+                    icon={
+                      <IconHelm
                         size="large"
                         style={{
                           color: "var(--semi-color-text-0)",

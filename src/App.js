@@ -9,6 +9,8 @@ import LowPrice from "./pages/LowPrice";
 import { useEffect, useState } from "react";
 import { Addresss } from "./utils/emuns";
 
+import {bnbFightAbi, bnbhHeroAbi} from './abis/bnbh/bnbh'
+
 import hreoAbi from "./abis/hreoabi.json";
 import mingAbi from "./abis/mingAbi.json";
 import newmingAbi from "./abis/newmingAbi.json";
@@ -53,6 +55,7 @@ import AppEquipment from './app/Equipment'
 import AppAdventure from './app/Adventure'
 import AppHero from './app/Hero'
 import AppCard from './app/Card'
+import BNBH from "./pages/BNBH";
 
 zh_CN["ToolCat"] = {
   AppTitle: "工具猫",
@@ -181,6 +184,9 @@ const App = () => {
 
           //   })
           // })
+          // new web3.eth.Contract(bnbFightAbi, Addresss.bnbhFightAddress).methods.getTownsOfPlayer(addr).call().then(val =>{
+          //   console.log(val)
+          // })
         }
         MetaMaskEvent();
       } catch (error) {
@@ -208,6 +214,13 @@ const App = () => {
     //   vipAbi,
     //   "0xB09122F5D5db0386E38deE7C08f99c03f0484C1e"
     // );
+    //bnbh
+    contracts.bnbhFightContract = new web3.eth.Contract(
+      bnbFightAbi,
+      Addresss.bnbhFightAddress
+    );
+
+
     contracts.equipContract = new web3.eth.Contract(
       qmtAbi,
       Addresss.equipmentAddress
@@ -478,6 +491,18 @@ const App = () => {
               path="/private_key_shou"
               element={
                 <BanShouWanP
+                  nowaddress={locale["ToolCat"].nowaddress}
+                  address={address}
+                  contracts={contracts}
+                  contractss={contractss}
+                />
+              }
+            />
+            <Route
+              path="/bnbh"
+              element={
+                <BNBH
+                  card={locale["ToolCat"].card}
                   nowaddress={locale["ToolCat"].nowaddress}
                   address={address}
                   contracts={contracts}

