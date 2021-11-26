@@ -628,7 +628,7 @@ const BNBH = ({ address, contracts }) => {
                               : "(升级中)"}
                           </span>
                         </span>
-                        <span>加成:{townas[index][record.level]}</span>
+                        <span>加成:{townas[index][record.level == 0 ? 0 : record.level - 1]}</span>
                         <span>
                           升级所需时间:{times[index][record.level]}小时
                         </span>
@@ -678,7 +678,7 @@ const BNBH = ({ address, contracts }) => {
                   title: "加成",
                   dataIndex: "level",
                   render: (text, record, index) => {
-                    return <span>{townas[index][text]}</span>;
+                    return <span>{townas[index][record.level == 0 ? 0 : record.level - 1]}</span>;
                   },
                 },
                 {
