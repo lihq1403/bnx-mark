@@ -111,7 +111,7 @@ const BNBH = ({ address, contracts }) => {
   const [mxlist, setMxList] = useState([]);
   const [workLoad, setWorkLoad] = useState(false);
   const [bossIndex, setBossIndex] = useState(5);
-  const [claimBnb, setclaimBnb] = useState(5);
+  const [claimBnb, setclaimBnb] = useState(0);
   const [gass, setGass] = useState(0);
   const [gassType, setGassType] = useState(0);
   useEffect(() => {
@@ -120,11 +120,38 @@ const BNBH = ({ address, contracts }) => {
     getHero();
   }, [address]);
 
+  const getLog = () => {
+    if (!address) {
+      return;
+    }
+    const data = {
+      variables: {
+        network: "bsc",
+        address: "0xde9fFb228C1789FEf3F08014498F2b16c57db855",
+        eventType: "Fight",
+        offset: 0,
+        limit: 12,
+        from: null,
+        to: null,
+        txFrom: [address],
+      },
+      query:
+        'query ($network: EthereumNetwork!, $address: String!, $eventType: String!, $limit: Int!, $offset: Int!, $from: ISO8601DateTime, $to: ISO8601DateTime, $txFrom: [String!]) {ethereum(network: $network) {  smartContractEvents(    options: {desc: "block.height", limit: $limit, offset: $offset}    date: {since: $from, till: $to}    txFrom: {in: $txFrom}    smartContractAddress: {is: $address}    smartContractEvent: {is: $eventType}  ) {    smartContractEvent {      name      __typename    }    block {      height      timestamp {        iso8601        unixtime        __typename      }      __typename    }    arguments {      value      argument      __typename    }    __typename  }  __typename}\n}',
+    };
+    fetch("https://graphql.bitquery.io", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((value) => console.log(value));
+  };
+
   const getHero = () => {
     if (!address || !contracts) {
       Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
       return;
     }
+    // getLog();
     initWeb3(Web3.givenProvider)
       .eth.getGasPrice()
       .then((v) => {
@@ -177,7 +204,7 @@ const BNBH = ({ address, contracts }) => {
     });
     contracts.bnbhFightContract.methods
       .fight(item.tokenId, bosss[bossIndex].type - 1)
-      .send({ from: address, gasPrice: (gass + gassType) * Math.pow(10, 9) })
+      .send({ from: address })
       .then((val) => {
         Notification.close(id);
         if (val.events.Fight.returnValues) {
@@ -185,12 +212,12 @@ const BNBH = ({ address, contracts }) => {
           if (data.rewards == "0") {
             Notification.error({
               title: `英雄 ${item.tokenId} 战斗失败}`,
-              content: `收益:${data.rewards}   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
+              content: `收益:${(Number(data.rewards) / Math.pow(10, 18).toFixed(4))}   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
             });
           } else {
             Notification.success({
               title: `英雄 ${item.tokenId} 战斗胜利`,
-              content: `收益:${data.rewards}   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
+              content: `收益:${(Number(data.rewards) / Math.pow(10, 18).toFixed(4))}   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
             });
           }
           getHero();
@@ -203,14 +230,14 @@ const BNBH = ({ address, contracts }) => {
           }
         } else {
           Notification.error({
-            content: `英雄 ${item.tokenId} 战斗超时`,
+            content: `英雄 ${item.tokenId} 战斗超时, 战斗可能打完, 链上数据错误, 去官网查看一下`,
           });
         }
       })
       .catch(() => {
         Notification.close(id);
         Notification.error({
-          content: `英雄 ${item.tokenId} 战斗超时`,
+          content: `英雄 ${item.tokenId} 战斗关闭`,
         });
       });
   };
@@ -268,7 +295,7 @@ const BNBH = ({ address, contracts }) => {
       >
         <Tag color="red">待提取收益: {claimBnb}BNB</Tag>
       </Space>
-      <Space
+      {/* <Space
         style={{
           display: "flex",
           width: "90%",
@@ -308,7 +335,7 @@ const BNBH = ({ address, contracts }) => {
             setGassType(e - gass);
           }}
         />
-      </Space>
+      </Space> */}
       <Space
         style={{
           display: "flex",
@@ -588,7 +615,7 @@ const BNBH = ({ address, contracts }) => {
         rowSelection={{
           selectedRowKeys: selectedRowKeys,
           onChange: (selectedRowKeys, selectedRows) => {
-            setMxList(selectedRows);
+            setMyCardSelectedList(selectedRows);
             setselectedRowKeys(selectedRowKeys);
           },
           getCheckboxProps: (record) => {
@@ -628,7 +655,14 @@ const BNBH = ({ address, contracts }) => {
                               : "(升级中)"}
                           </span>
                         </span>
-                        <span>加成:{townas[index][record.level == 0 ? 0 : record.level - 1]}</span>
+                        <span>
+                          加成:
+                          {
+                            townas[index][
+                              record.level == 0 ? 0 : record.level - 1
+                            ]
+                          }
+                        </span>
                         <span>
                           升级所需时间:{times[index][record.level]}小时
                         </span>
@@ -678,7 +712,15 @@ const BNBH = ({ address, contracts }) => {
                   title: "加成",
                   dataIndex: "level",
                   render: (text, record, index) => {
-                    return <span>{townas[index][record.level == 0 ? 0 : record.level - 1]}</span>;
+                    return (
+                      <span>
+                        {
+                          townas[index][
+                            record.level == 0 ? 0 : record.level - 1
+                          ]
+                        }
+                      </span>
+                    );
                   },
                 },
                 {

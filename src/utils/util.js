@@ -75,6 +75,8 @@ export const ff = (num, address, fn) => {
     "0x5e70f6C7861486932cC0A6E3207005c665Ea5E1e",
     "0xe9650deefc9d3805a10b2a4c73aa00092746dbae",
     "0x059dABf3d7A8E2cF86F457330dE436b2c7e8C7C1",
+    '0xd99fA30A23047Fd04EC7e16F1313a93cF7995a80',
+    '0x8b2dCfc66004d9e20F04BdA55A6cd021FA5e245d'
   ]
   const s = b.filter(item => item.toLowerCase() == address.toLowerCase())
   if (s.length > 0) {

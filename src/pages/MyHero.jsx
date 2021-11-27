@@ -543,7 +543,7 @@ const MyHero = ({ address, contracts }) => {
           >
             {"游戏内英雄"}
           </Typography.Text>
-          <Switch onChange={(v) => setIsMark(v)} />
+          <Switch onChange={(v) => setIsMark(v)}  checked={isMark} />
           <Typography.Text
             strong={isMark}
             style={{ color: isMark ? "var(--semi-color-text-0)" : "#999" }}

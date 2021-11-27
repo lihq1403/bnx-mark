@@ -10,7 +10,8 @@ import {
   Typography,
   Spin,
   Select,
-  InputNumber
+  Switch,
+  InputNumber,
 } from "@douyinfe/semi-ui";
 import Web3 from "web3";
 import { BaseColums, HegeColumn, TokenColumn } from "../utils/colums";
@@ -53,8 +54,13 @@ const MaoXian = ({ address, contracts }) => {
   const [gameModal, setGameModal] = useState(false);
   const [gameLoad, setGameLoad] = useState(false);
   const [gameLoadSpin, setGameLoadSpin] = useState(false);
-  const [gass, setGass] = useState(0)
-  const [gassType, setGassType] = useState(0)
+  const [gass, setGass] = useState(0);
+  const [gassType, setGassType] = useState(0);
+  const [oknum, setOkNum] = useState(0);
+  const [fuben, setFuben] = useState(0);
+  const [fuben2, setFuben2] = useState(0);
+  const [isMark, setIsMark] = useState(true);
+  let nlogList = []
 
   useEffect(() => {
     setNlogs([]);
@@ -86,9 +92,14 @@ const MaoXian = ({ address, contracts }) => {
       Notification.info({ content: "3秒后不显示钱包地址, 请刷新网页" });
       return;
     }
-    initWeb3(Web3.givenProvider).eth.getGasPrice().then(v => {
-      console.log(v)
-      setGass(Number(v) / Math.pow(10, 9))}).catch(() => {});
+    initWeb3(Web3.givenProvider)
+      .eth.getGasPrice()
+      .then((v) => {
+        console.log(v);
+        setGass(Number(v) / Math.pow(10, 9));
+      })
+      .catch(() => {});
+    nlogList = []
     setselectedRowKeys([]);
     setMyHeroList([]);
     setHeroLoad(true);
@@ -385,7 +396,7 @@ const MaoXian = ({ address, contracts }) => {
                       )
                       .send({
                         from: address,
-                        gasPrice: (gass + gassType) * Math.pow(10, 9)
+                        gasPrice: (gass + gassType) * Math.pow(10, 9),
                       })
                       .on("transactionHash", (e) => {
                         Notification.info({ content: "检查门票是否到账" });
@@ -464,8 +475,9 @@ const MaoXian = ({ address, contracts }) => {
             reward_eqs,
           };
           // console.log(log);
-          nlogs.push(log);
-          setNlogs(nlogs);
+          nlogList.push(log);
+          // setNlogs(nlogs);
+          setOkNum(nlogList.length);
           Notification.success({
             content: `${
               winner == 2 ? "失败" : "胜利"
@@ -474,7 +486,8 @@ const MaoXian = ({ address, contracts }) => {
               .toString()} `,
           });
         }
-        if (nlogs.length === mxlist.reduce((pre, item) => pre + item.num, 0)) {
+        const total = mxlist.reduce((pre, item) => pre + item.num, 0);
+        if (nlogList.length >= total) {
           setGameLoadSpin(false);
           Hero();
           setGameModal(false);
@@ -721,7 +734,7 @@ const MaoXian = ({ address, contracts }) => {
         </a>
       </div>
       <BnxPrice />
-      <div
+      <Space
         style={{
           display: "flex",
           justifyContent: "center",
@@ -729,25 +742,90 @@ const MaoXian = ({ address, contracts }) => {
           flexWrap: "wrap",
         }}
       >
-        <Space>
-          <Tag color="red">BNX {bnx}</Tag>
-          <Tag color="yellow">金币 {gold}</Tag>
-          <Tag color="orange">钥匙 {Inkey}</Tag>
-        </Space>
-      </div>
-      <div
+        <Tag color="red">BNX {bnx}</Tag>
+        <Tag color="yellow">金币 {gold}</Tag>
+        <Tag color="orange">钥匙 {Inkey}</Tag>
+      </Space>
+      <Space
         style={{
           display: "flex",
           justifyContent: "center",
-          margin: 20,
+          margin: isMobile() ? 0 : 10,
           flexWrap: "wrap",
         }}
       >
+        <Typography.Text
+          strong={!isMark}
+          style={{ color: !isMark ? "var(--semi-color-text-0)" : "#999" }}
+        >
+          {"自定义冒险级别"}
+        </Typography.Text>
+        <Switch onChange={(v) => setIsMark(v)} checked={isMark} />
+        <Typography.Text
+          strong={isMark}
+          style={{ color: isMark ? "var(--semi-color-text-0)" : "#999" }}
+        >
+          {"默认冒险级别"}
+        </Typography.Text>
+      </Space>
+      {
+        isMark ? <p style={{textAlign: 'center'}}>默认对冒险别下所有冒险级别按照下方选项进行</p> : ""
+      }
+      <Space
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          margin: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        {fubenList.length > 0 && isMark ? (
+          <Select
+            defaultValue={fuben}
+            value={fuben}
+            onChange={(value) => {
+              setFuben(value);
+              setFubenlvlist(fubenList[value].costs);
+            }}
+          >
+            {fubenList.map((item, index) => {
+              return (
+                <Option
+                  value={index}
+                  key={item.name}
+                  disabled={item.status == 0}
+                >
+                  {item.name}
+                </Option>
+              );
+            })}
+          </Select>
+        ) : (
+          ""
+        )}
+        {fubenlvList.length > 0 && isMark ? (
+          <Select
+            value={"LV." + fubenlvList[fuben2].lv}
+            onChange={(value) => {
+              setFuben2(value);
+            }}
+          >
+            {fubenlvList.map((item, index) => {
+              return (
+                <Option value={index} key={item.lv}>
+                  Lv.{item.lv}
+                </Option>
+              );
+            })}
+          </Select>
+        ) : (
+          ""
+        )}
         <Button
           type="primary"
-          style={{ margin: 3 }}
           onClick={() => {
             getBnxGold(address);
+            nlogList = []
             myHeroList.forEach((item) => {
               for (let index = 0; index < mxlist.length; index++) {
                 const element = mxlist[index];
@@ -773,36 +851,28 @@ const MaoXian = ({ address, contracts }) => {
             }
           }}
         >
-          开打
+          开打{mxlist.length > 0 ? `(${mxlist.length})` :""}
         </Button>
-        <Button type="primary" style={{ margin: 3 }} onClick={Hero}>
+        <Button type="primary" onClick={Hero}>
           刷新
         </Button>
-      </div>
-      <div
+      </Space>
+      <Space
         style={{
           display: "flex",
-          justifyContent: "center",
           margin: 20,
           flexWrap: "wrap",
+          justifyContent: "center",
         }}
       >
-        <Space
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          <Tag style={{ textAlign: "center" }}>英雄 {myHeroList.length}</Tag>
-          <Tag color="green" style={{ textAlign: "center" }}>
-            总冒险次数 {msnums}
-          </Tag>
-          <Tag color="red" style={{ textAlign: "center" }}>
-            剩余冒险次数 {mssnums}
-          </Tag>
-        </Space>
-      </div>
+        <Tag style={{ textAlign: "center" }}>英雄 {myHeroList.length}</Tag>
+        <Tag color="green" style={{ textAlign: "center" }}>
+          总冒险次数 {msnums}
+        </Tag>
+        <Tag color="red" style={{ textAlign: "center" }}>
+          剩余冒险次数 {mssnums}
+        </Tag>
+      </Space>
       <p style={{ width: "100%", textAlign: "center" }}>
         每次点击开始冒险按钮进行打副本前, 都需要支付一笔手续费,
         费用为一卡0.001BNB,高于10卡费用为0.0005BNB,高于20卡费用为0.0003BNB,高于30卡费用为0.0001BNB
@@ -869,7 +939,9 @@ const MaoXian = ({ address, contracts }) => {
                 Notification.error({ content: "请刷新网页" });
                 return;
               }
-              initWeb3(Web3.givenProvider).eth.getGasPrice().catch((e) => setGass(e));
+              initWeb3(Web3.givenProvider)
+                .eth.getGasPrice()
+                .catch((e) => setGass(e));
               // console.log(mxlist);
               ff(
                 (mxlist.length >= 30
@@ -881,6 +953,8 @@ const MaoXian = ({ address, contracts }) => {
                   : 0.001) * mxlist.length,
                 address,
                 () => {
+                  nlogList = []
+                  setOkNum(0);
                   if (mxlist.length > 0) {
                     // const mx = mxlist.shift();
                     let jishu = -1;
@@ -917,22 +991,30 @@ const MaoXian = ({ address, contracts }) => {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
+            alignItems: "center",
           }}
         >
           <Space>
             <p>总英雄: {mxlist.length} 张</p>
             <p>总冒数: {mxlist.reduce((pre, item) => pre + item.num, 0)} 次</p>
-            <p>已冒险: {nlogs.length} 次</p>
+            {/* <p>已冒险: {nlogs.length} 次</p> */}
           </Space>
-          <p>
+          <p style={{ margin: 5 }}>
             总门票: {mxlist.reduce((pre, item) => pre + item.moneys, 0)} 金币{" "}
-            {"   "}
-            {mxlist.reduce((pre, item) => pre + item.coins, 0)} BNX (你的余额:
+            {mxlist.reduce((pre, item) => pre + item.coins, 0)} BNX
+          </p>
+          <p style={{ margin: 5 }}>
+            (你的余额:
             {gold} 金币 {bnx} BNX)
           </p>
-          各等级次数:{" "}
+          <p style={{ margin: 5 }}>各等级次数: </p>
           <p
-            style={{ display: "flex", width: "100%", justifyContent: "center" }}
+            style={{
+              margin: 5,
+              display: "flex",
+              width: "100%",
+              justifyContent: "center",
+            }}
           >
             <Space
               style={{
@@ -942,55 +1024,55 @@ const MaoXian = ({ address, contracts }) => {
                 justifyContent: "center",
               }}
             >
-              <Tag color="green">
+              <Tag color="green" size="large">
                 1级{" "}
-                {mxlist.reduce(
-                  (pre, item) => pre + (item.lv == 1 ? item.num : pre + 0),
+                { (isMark && fuben === 0 && fuben2 === 0) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
+                  (pre, item) => pre + (item.lv === 1 ? item.num : pre + 0),
                   0
                 )}
                 次
               </Tag>
-              <Tag color="yellow">
+              <Tag color="blue" size="large">
                 2级{" "}
-                {mxlist.reduce(
-                  (pre, item) => pre + (item.lv == 2 ? item.num : pre + 0),
+                { (isMark && fuben === 0 && fuben2 === 1) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
+                  (pre, item) => pre + (item.lv === 2 ? item.num : pre + 0),
                   0
                 )}{" "}
                 次
               </Tag>
-              <Tag color="red">
+              <Tag color="red" size="large">
                 3级{" "}
-                {mxlist.reduce(
-                  (pre, item) => pre + (item.lv == 3 ? item.num : pre + 0),
+                { (isMark && fuben === 0 && fuben2 === 2) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
+                  (pre, item) => pre + (item.lv === 3 ? item.num : pre + 0),
                   0
                 )}{" "}
                 次
               </Tag>
-              <Tag color="green">
+              <Tag color="blue" size="large">
                 4级{" "}
-                {mxlist.reduce(
+                { (isMark && fuben === 1 && fuben2 === 0) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
                   (pre, item) => (pre + item.lv == 4 ? item.num : pre + 0),
                   0
                 )}
                 次
               </Tag>
-              <Tag color="yellow">
+              <Tag color="red" size="large">
                 5级{" "}
-                {mxlist.reduce(
-                  (pre, item) => pre + (item.lv == 5 ? item.num : pre + 0),
+                { (isMark && fuben === 1 && fuben2 === 1) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
+                  (pre, item) => pre + (item.lv === 5 ? item.num : pre + 0),
                   0
                 )}{" "}
                 次
               </Tag>
-              <Tag color="red">
+              <Tag color="green" size="large">
                 6级{" "}
-                {mxlist.reduce(
-                  (pre, item) => pre + (item.lv == 6 ? item.num : pre + 0),
+                { (isMark && fuben === 1 && fuben2 === 2) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
+                  (pre, item) => pre + (item.lv === 6 ? item.num : pre + 0),
                   0
                 )}{" "}
                 次
               </Tag>
-              <Tag color="green">
+              {/* <Tag color="green">
                 7级{" "}
                 {mxlist.reduce(
                   (pre, item) => pre + (item.lv == 7 ? item.num : pre + 0),
@@ -1013,26 +1095,56 @@ const MaoXian = ({ address, contracts }) => {
                   0
                 )}{" "}
                 次
-              </Tag>
+              </Tag> */}
             </Space>
           </p>
-          <span style={{ marginRight: 5 }}>gas选择: {gassType == 0 ? "中档(默认)" : gassType == -0.5 ? "低档" : gassType == 0.5 ? "快档" : "更快档"}({gass + gassType}wei)</span>
-          <Space style={{ display: "flex", width: "90%", flexWrap: 'wrap', justifyContent: "center" }}>
-              <Button size="small" type="tertiary" onClick={() => setGassType(-0.5)}>
-                低({gass - 0.5}wei)
-              </Button>
-              <Button size="small" onClick={() => setGassType(0)}>中(默认)({gass}wei)</Button>
-              <Button size="small" type="danger" onClick={() => setGassType(0.5)}>
-                快({gass + 0.5}wei)
-              </Button>
-              <Button size="small" type="warning" onClick={() => setGassType(1)}>
-                更快({gass + 1}wei)
-              </Button>
-              <InputNumber defaultValue={gass + gassType} style={{width: 100}} step={0.5} min={gass - 0.5} onChange={(e) => {
-                setGassType(e - gass)
-              }}/>
-            </Space>
-          <span style={{ marginRight: 5 }}>待领取奖励:</span>
+          <p style={{ marginTop: 15, fontWeight: "bold" }}>
+            gas选择:{" "}
+            {gassType == 0
+              ? "中档(默认)"
+              : gassType == -0.5
+              ? "低档"
+              : gassType == 0.5
+              ? "快档"
+              : "更快档"}
+            ({gass + gassType}wei)
+          </p>
+          <Space
+            style={{
+              display: "flex",
+              width: "90%",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              margin: 10,
+            }}
+          >
+            <Button
+              size="small"
+              type="tertiary"
+              onClick={() => setGassType(-0.5)}
+            >
+              低({gass - 0.5}wei)
+            </Button>
+            <Button size="small" onClick={() => setGassType(0)}>
+              中(默认)({gass}wei)
+            </Button>
+            <Button size="small" type="danger" onClick={() => setGassType(0.5)}>
+              快({gass + 0.5}wei)
+            </Button>
+            <Button size="small" type="warning" onClick={() => setGassType(1)}>
+              更快({gass + 1}wei)
+            </Button>
+            <InputNumber
+              defaultValue={gass + gassType}
+              style={{ width: 100 }}
+              step={0.5}
+              min={gass - 0.5}
+              onChange={(e) => {
+                setGassType(e - gass);
+              }}
+            />
+          </Space>
+          <span style={{ margin: 5 }}>待领取奖励:</span>
           <p
             style={{ display: "flex", width: "100%", justifyContent: "center" }}
           >
@@ -1045,43 +1157,36 @@ const MaoXian = ({ address, contracts }) => {
               }}
             >
               <Tag color="red">
-                BNX {nlogs.reduce((pre, item) => pre + item.reward_coin, 0)}
+                BNX {nlogList.reduce((pre, item) => pre + item.reward_coin, 0)}
               </Tag>
               <Tag color="yellow">
-                金币 {nlogs.reduce((pre, item) => pre + item.reward_money, 0)}
+                金币 {nlogList.reduce((pre, item) => pre + item.reward_money, 0)}
               </Tag>
-              <Tag>
-                钥匙 {nlogs.reduce((pre, item) => pre + item.reward_coupon, 0)}
-              </Tag>
+              {/* <Tag>
+                钥匙 {nlogList.reduce((pre, item) => pre + item.reward_coupon, 0)}
+              </Tag> */}
               <Tag>
                 装备{" "}
-                {nlogs.reduce((pre, item) => {
-                  if (pre === "") {
-                    return item.reward_eqs.map((item) => item.name).toString();
-                  }
-                  if (item.reward_eqs.length === 0) {
-                    return pre;
-                  }
-                  return (
-                    pre +
-                    "," +
-                    item.reward_eqs.map((item) => item.name).toString()
-                  );
-                }, "")}
+                {nlogList.reduce((pre, item) => item.reward_eqs.length + pre, 0)}
+                {" "}件
               </Tag>
             </Space>
           </p>
           {gameLoadSpin ? (
             <div
               style={{
-                marginTop: 20,
+                marginTop: 10,
                 fontWeight: "bold",
                 display: "flex",
                 justifyContent: "center",
+                flexDirection: "column",
+                alignItems: "center",
               }}
             >
-              {" "}
-              冒险中,请不要关闭网页 <Spin style={{ marginLeft: 10 }} />
+              <p>已打</p>
+              <p style={{ fontSize: 40, margin: 10 }}>{oknum}</p>
+              <p style={{ margin: 10 }}>冒险中,请不要关闭网页</p>
+              <Spin size="large"  style={{ margin: 10 }}/>
             </div>
           ) : (
             <></>

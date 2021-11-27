@@ -200,7 +200,7 @@ const MyZhuangBei = ({ address, contracts }) => {
           >
             {"游戏内装备"}
           </Typography.Text>
-          <Switch onChange={(v) => setIsMark(v)} />
+          <Switch onChange={(v) => setIsMark(v)}  checked={isMark} />
           <Typography.Text
             strong={isMark}
             style={{ color: isMark ? "var(--semi-color-text-0)" : "#999" }}
@@ -769,7 +769,7 @@ const MyZhuangBei = ({ address, contracts }) => {
             style={{ display: "flex", justifyContent: "center", margin: 10 }}
           >
             <Typography.Title heading={3}>未上链装备</Typography.Title>
-            <Button
+            {/* <Button
               disabled={myCardSelectedList2.length === 0}
               onClick={() => {
                 if (!address) {
@@ -817,7 +817,7 @@ const MyZhuangBei = ({ address, contracts }) => {
               }}
             >
               批量出库
-            </Button>
+            </Button> */}
           </Space>
           <Table
             loading={heroLoad}
