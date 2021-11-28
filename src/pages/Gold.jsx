@@ -617,7 +617,7 @@ const Gold = ({ address, contracts }) => {
         </Button>
       </div>
 
-      <p style={{ width: "100%", textAlign: "center" }}>
+      <p style={{ width: "100%", textAlign: "center", fontSize: 10 }}>
         每次点击相关操作按钮前, 都需要支付每10卡0.002BNB手续费
       </p>
       {myWorkCardSelectedList.length > 0 ? (
@@ -651,6 +651,7 @@ const Gold = ({ address, contracts }) => {
         dataSource={gongzuoList}
         pagination={{
           formatPageText: !isMobile(),
+          pageSize: 100,
         }}
         bordered
       />

@@ -59,8 +59,9 @@ const MaoXian = ({ address, contracts }) => {
   const [oknum, setOkNum] = useState(0);
   const [fuben, setFuben] = useState(0);
   const [fuben2, setFuben2] = useState(0);
+  const [flist, setFlist] = useState([]);
   const [isMark, setIsMark] = useState(true);
-  let nlogList = []
+  let nlogList = [];
 
   useEffect(() => {
     setNlogs([]);
@@ -99,7 +100,7 @@ const MaoXian = ({ address, contracts }) => {
         setGass(Number(v) / Math.pow(10, 9));
       })
       .catch(() => {});
-    nlogList = []
+    nlogList = [];
     setselectedRowKeys([]);
     setMyHeroList([]);
     setHeroLoad(true);
@@ -250,7 +251,10 @@ const MaoXian = ({ address, contracts }) => {
           });
           setMsNums(ms);
           setMssNums(mss);
-          setMyHeroList(nlist.sort((a, b) => b.num - a.num));
+          const ll = nlist.sort((a, b) => b.num - a.num);
+          const fll = nlist.map((item) => [0, 0]);
+          setFlist(fll);
+          setMyHeroList(ll);
 
           const blocks = nlist.filter((record) => {
             let hege = false;
@@ -495,229 +499,7 @@ const MaoXian = ({ address, contracts }) => {
         }
       });
   };
-  const MxMColums = [
-    {
-      title: "我的英雄",
-      dataIndex: "num",
-      filters: [
-        {
-          text: "合格",
-          value: true,
-        },
-        {
-          text: "黑奴",
-          value: false,
-        },
-      ],
-      onFilter: (value, record) => {
-        let hege = false;
-        switch (record.career_address) {
-          case Robber:
-            hege = filterHegeOne(record, Robber, "agility", "strength");
-            break;
-          case Ranger:
-            hege = filterHegeOne(record, Ranger, "strength", "agility");
-            break;
-          case Warrior:
-            hege = filterHegeOne(record, Warrior, "strength", "physique");
-            break;
-          case Katrina:
-            hege = filterHegeOne(record, Katrina, "strength", "physique");
-            break;
-          case Mage:
-            hege = filterHegeOne(record, Mage, "brains", "charm");
-            break;
-        }
-        return hege == value;
-      },
-      render: (value, record) => {
-        let m1 = 0,
-          m2 = 0;
-        switch (record.career_address) {
-          case Robber:
-            m1 = record.agility;
-            m2 = record.strength;
-            break;
-          case Warrior:
-            m1 = record.strength;
-            m2 = record.physique;
-            break;
-          case Katrina:
-            m1 = record.strength;
-            m2 = record.physique;
-            break;
-          case Mage:
-            m1 = record.brains;
-            m2 = record.charm;
-            break;
-          case Ranger:
-            m1 = record.strength;
-            m2 = record.agility;
-            break;
-        }
-        let hege = false;
-        switch (record.career_address) {
-          case Robber:
-            hege = filterHegeOne(record, Robber, "agility", "strength");
-            break;
-          case Ranger:
-            hege = filterHegeOne(record, Ranger, "strength", "agility");
-            break;
-          case Warrior:
-            hege = filterHegeOne(record, Warrior, "strength", "physique");
-            break;
-          case Katrina:
-            hege = filterHegeOne(record, Katrina, "strength", "physique");
-            break;
-          case Mage:
-            hege = filterHegeOne(record, Mage, "brains", "charm");
-            break;
-        }
-        return (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "column",
-              justifyContent: "center",
-            }}
-          >
-            <span
-              style={{
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <Space>
-                <Tag color={hege ? "green" : "grey"}>
-                  {hege ? "合格" : "黑奴"}
-                </Tag>
-                {names[record.career_address]} {record.level}级
-              </Space>
-            </span>
-            <span>
-              力{record.strength}/敏{record.agility}/体{record.physique}/意
-              {record.volition}/智{record.brains}/精{record.charm}
-            </span>
-            <span>
-              <Tag color="orange">剩余冒险次数: {record.num}</Tag>{" "}
-            </span>
-            <Space>
-              <Select
-                size="small"
-                defaultValue={fubenList ? fubenList[0].id : 1}
-                onChange={(value) => {
-                  record["l"] = value;
-                  setFubenlvlist(
-                    fubenList.filter((item) => item.id === value)[0].costs
-                  );
-                }}
-              >
-                {fubenList.map((item) => {
-                  return (
-                    <Option
-                      value={item.id}
-                      key={item.name}
-                      disabled={item.status == 0}
-                    >
-                      {item.name}
-                    </Option>
-                  );
-                })}
-              </Select>
-              <Select
-                size="small"
-                defaultValue={fubenlvList ? fubenlvList[0].lv : 1}
-                onChange={(value) => {
-                  record["lv"] = value;
-                }}
-              >
-                {fubenlvList.map((item) => {
-                  return (
-                    <Option value={item.lv} key={item.lv}>
-                      Lv.{item.lv}
-                    </Option>
-                  );
-                })}
-              </Select>
-            </Space>
-          </div>
-        );
-      },
-    },
-  ];
-  const maoxianColumn = [
-    ...TokenColumn,
-    ...HegeColumn,
-    ...BaseColums,
-    {
-      title: "战场",
-      dataIndex: "zhanchang",
-      render: (text, record) => {
-        if (fubenList.length == 0) {
-          return <p>网错</p>;
-        }
-        return (
-          <Select
-            size="small"
-            showArrow={!isMobile()}
-            defaultValue={fubenList[0].id}
-            onChange={(value) => {
-              record["l"] = value;
-              setFubenlvlist(
-                fubenList.filter((item) => item.id === value)[0].costs
-              );
-            }}
-          >
-            {fubenList.map((item) => {
-              return (
-                <Option
-                  value={item.id}
-                  key={item.name}
-                  disabled={item.status == 0}
-                >
-                  {item.name}
-                </Option>
-              );
-            })}
-          </Select>
-        );
-      },
-    },
-    {
-      title: "级别",
-      dataIndex: "type",
-      width: isMobile() ? 20 : 40,
-      render: (text, record) => {
-        if (fubenlvList.length == 0) {
-          return <p>网错</p>;
-        }
-        return (
-          <Select
-            size="small"
-            showArrow={!isMobile()}
-            defaultValue={fubenlvList[0].lv}
-            onChange={(value) => {
-              record["lv"] = value;
-            }}
-          >
-            {fubenlvList.map((item) => {
-              return (
-                <Option value={item.lv} key={item.lv}>
-                  Lv.{item.lv}
-                </Option>
-              );
-            })}
-          </Select>
-        );
-      },
-    },
-    {
-      title: "次数",
-      dataIndex: "num",
-    },
-  ];
+
   return (
     <MyHeroContainer>
       <Typography.Title style={{ textAlign: "center" }}>冒险</Typography.Title>
@@ -768,9 +550,13 @@ const MaoXian = ({ address, contracts }) => {
           {"默认冒险级别"}
         </Typography.Text>
       </Space>
-      {
-        isMark ? <p style={{textAlign: 'center'}}>默认对冒险别下所有冒险级别按照下方选项进行</p> : ""
-      }
+      {isMark ? (
+        <p style={{ textAlign: "center" }}>
+          默认对冒险别下所有冒险级别按照下方选项进行, 不能单独设置每一项
+        </p>
+      ) : (
+        ""
+      )}
       <Space
         style={{
           display: "flex",
@@ -785,6 +571,7 @@ const MaoXian = ({ address, contracts }) => {
             value={fuben}
             onChange={(value) => {
               setFuben(value);
+              setFuben2(0);
               setFubenlvlist(fubenList[value].costs);
             }}
           >
@@ -825,20 +612,22 @@ const MaoXian = ({ address, contracts }) => {
           type="primary"
           onClick={() => {
             getBnxGold(address);
-            nlogList = []
+            nlogList = [];
             myHeroList.forEach((item) => {
               for (let index = 0; index < mxlist.length; index++) {
                 const element = mxlist[index];
                 if (item.token_id === element.token_id) {
-                  mxlist[index].l = element.l;
-                  mxlist[index].lv = element.lv;
-                  const fuben = fubenList
+                  mxlist[index].l = isMark ? fubenList[fuben].l : element.l;
+                  mxlist[index].lv = isMark
+                    ? fubenlvList[fuben2].lv
+                    : element.lv;
+                  const fube = fubenList
                     .filter((item) => item.id == element.l)[0]
                     .costs.filter((item) => item.lv == element.lv)[0];
-                  mxlist[index]["coin"] = fuben.coin;
-                  mxlist[index]["money"] = fuben.money;
-                  mxlist[index]["coins"] = fuben.coin * element.num;
-                  mxlist[index]["moneys"] = fuben.money * element.num;
+                  mxlist[index]["coin"] = fube.coin;
+                  mxlist[index]["money"] = fube.money;
+                  mxlist[index]["coins"] = fube.coin * element.num;
+                  mxlist[index]["moneys"] = fube.money * element.num;
                   break;
                 }
               }
@@ -851,7 +640,7 @@ const MaoXian = ({ address, contracts }) => {
             }
           }}
         >
-          开打{mxlist.length > 0 ? `(${mxlist.length})` :""}
+          开打{mxlist.length > 0 ? `(${mxlist.length})` : ""}
         </Button>
         <Button type="primary" onClick={Hero}>
           刷新
@@ -873,9 +662,9 @@ const MaoXian = ({ address, contracts }) => {
           剩余冒险次数 {mssnums}
         </Tag>
       </Space>
-      <p style={{ width: "100%", textAlign: "center" }}>
+      <p style={{ width: "100%", textAlign: "center", fontSize: 10 }}>
         每次点击开始冒险按钮进行打副本前, 都需要支付一笔手续费,
-        费用为一卡0.001BNB,高于10卡费用为0.0005BNB,高于20卡费用为0.0003BNB,高于30卡费用为0.0001BNB
+        费用为一卡0.002BNB,高于10卡费用为0.0008BNB,高于20卡费用为0.0005BNB,高于30卡费用为0.0003BNB
       </p>
       {myCardSelectedList.length > 0 ? (
         <div
@@ -894,11 +683,350 @@ const MaoXian = ({ address, contracts }) => {
       <Table
         loading={heroLoad}
         rowKey={(record) => record.token_id}
-        columns={isMobile() ? MxMColums : maoxianColumn}
+        columns={
+          isMobile()
+            ? [
+                {
+                  title: "我的英雄",
+                  dataIndex: "num",
+                  filters: [
+                    {
+                      text: "合格",
+                      value: true,
+                    },
+                    {
+                      text: "黑奴",
+                      value: false,
+                    },
+                  ],
+                  onFilter: (value, record) => {
+                    let hege = false;
+                    switch (record.career_address) {
+                      case Robber:
+                        hege = filterHegeOne(
+                          record,
+                          Robber,
+                          "agility",
+                          "strength"
+                        );
+                        break;
+                      case Ranger:
+                        hege = filterHegeOne(
+                          record,
+                          Ranger,
+                          "strength",
+                          "agility"
+                        );
+                        break;
+                      case Warrior:
+                        hege = filterHegeOne(
+                          record,
+                          Warrior,
+                          "strength",
+                          "physique"
+                        );
+                        break;
+                      case Katrina:
+                        hege = filterHegeOne(
+                          record,
+                          Katrina,
+                          "strength",
+                          "physique"
+                        );
+                        break;
+                      case Mage:
+                        hege = filterHegeOne(record, Mage, "brains", "charm");
+                        break;
+                    }
+                    return hege == value;
+                  },
+                  render: (value, record, index) => {
+                    let m1 = 0,
+                      m2 = 0;
+                    switch (record.career_address) {
+                      case Robber:
+                        m1 = record.agility;
+                        m2 = record.strength;
+                        break;
+                      case Warrior:
+                        m1 = record.strength;
+                        m2 = record.physique;
+                        break;
+                      case Katrina:
+                        m1 = record.strength;
+                        m2 = record.physique;
+                        break;
+                      case Mage:
+                        m1 = record.brains;
+                        m2 = record.charm;
+                        break;
+                      case Ranger:
+                        m1 = record.strength;
+                        m2 = record.agility;
+                        break;
+                    }
+                    let hege = false;
+                    switch (record.career_address) {
+                      case Robber:
+                        hege = filterHegeOne(
+                          record,
+                          Robber,
+                          "agility",
+                          "strength"
+                        );
+                        break;
+                      case Ranger:
+                        hege = filterHegeOne(
+                          record,
+                          Ranger,
+                          "strength",
+                          "agility"
+                        );
+                        break;
+                      case Warrior:
+                        hege = filterHegeOne(
+                          record,
+                          Warrior,
+                          "strength",
+                          "physique"
+                        );
+                        break;
+                      case Katrina:
+                        hege = filterHegeOne(
+                          record,
+                          Katrina,
+                          "strength",
+                          "physique"
+                        );
+                        break;
+                      case Mage:
+                        hege = filterHegeOne(record, Mage, "brains", "charm");
+                        break;
+                    }
+                    return (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Space>
+                            <Tag color={hege ? "green" : "grey"}>
+                              {hege ? "合格" : "黑奴"}
+                            </Tag>
+                            {names[record.career_address]} {record.level}级
+                          </Space>
+                        </span>
+                        <span>
+                          力{record.strength}/敏{record.agility}/体
+                          {record.physique}/意
+                          {record.volition}/智{record.brains}/精{record.charm}
+                        </span>
+                        <span>
+                          <Tag color="orange">剩余冒险次数: {record.num}</Tag>{" "}
+                        </span>
+                       {
+                         isMark ? (
+                          <Select
+                            size='small'
+                            disabled={isMark}
+                            style={{width: 200}}
+                            value={`${fubenList[isMark ? fuben : 0].name}-LV.${
+                              fubenlvList[isMark ? fuben2 : 0].lv
+                            }`}
+                            onChange={(value) => {
+                              const [i, j] = value.split(",");
+                              record["l"] = fubenList[i].id;
+                              record["lv"] = fubenlvList[j].lv;
+                              flist[index][0] = i
+                              flist[index][1] = j
+                              setIsMark(false);
+                              setFlist(flist)
+                              setFubenlvlist(
+                                fubenList.filter(
+                                  (item) =>
+                                    item.id === fubenList[flist[index][0]].id
+                                )[0].costs
+                              );
+                            }}
+                          >
+                            {fubenList.map((item, index_i) => {
+                              return fubenList
+                                .filter(
+                                  (item) =>
+                                    item.id === fubenList[flist[index][0]].id
+                                )[0]
+                                .costs.map((item1, index_j) => {
+                                  return (
+                                    <Option
+                                      value={`${index_i},${index_j}`}
+                                      key={item.name + item1.lv}
+                                      disabled={item.status == 0}
+                                    >
+                                      {item.name}-LV.{item1.lv}
+                                    </Option>
+                                  );
+                                });
+                            })}
+                          </Select>
+                        ) : (
+                          <Select
+                          size='small'
+                          style={{width: 200}}
+                            defaultValue={`${
+                              fubenList[isMark ? fuben : flist[index][0] || 0].name
+                            }-LV.${fubenlvList[isMark ? fuben2 : flist[index][1] || 0].lv}`}
+                            onChange={(value) => {
+                              const [i, j] = value.split(",");
+                              setIsMark(false);
+                              record["l"] = fubenList[i].id;
+                              record["lv"] = fubenlvList[j].lv;
+                              setFubenlvlist(
+                                fubenList.filter(
+                                  (item) =>
+                                    item.id === fubenList[flist[index][0]].id
+                                )[0].costs
+                              );
+                            }}
+                          >
+                            {fubenList.map((item, index_i) => {
+                              return fubenList
+                                .filter(
+                                  (item) =>
+                                    item.id === fubenList[flist[index][0]].id
+                                )[0]
+                                .costs.map((item1, index_j) => {
+                                  return (
+                                    <Option
+                                      value={`${index_i},${index_j}`}
+                                      key={item.name + item1.lv}
+                                      disabled={item.status == 0}
+                                    >
+                                      {item.name}-LV.{item1.lv}
+                                    </Option>
+                                  );
+                                });
+                            })}
+                          </Select>
+                        )
+                       }
+                      </div>
+                    );
+                  },
+                },
+              ]
+            : [
+                ...TokenColumn,
+                ...HegeColumn,
+                ...BaseColums,
+                {
+                  title: "战场",
+                  dataIndex: "zhanchang",
+                  width: 250,
+                  render: (text, record, index) => {
+                    if (fubenList.length == 0) {
+                      return <p>网错</p>;
+                    }
+                    return isMark ? (
+                      <Select
+                        disabled={isMark}
+                        style={{width: 200}}
+                        value={`${fubenList[isMark ? fuben : 0].name}-LV.${
+                          fubenlvList[isMark ? fuben2 : 0].lv
+                        }`}
+                        onChange={(value) => {
+                          const [i, j] = value.split(",");
+                          record["l"] = fubenList[i].id;
+                          record["lv"] = fubenlvList[j].lv;
+                          flist[index][0] = i
+                          flist[index][1] = j
+                          setIsMark(false);
+                          setFlist(flist)
+                          setFubenlvlist(
+                            fubenList.filter(
+                              (item) =>
+                                item.id === fubenList[flist[index][0]].id
+                            )[0].costs
+                          );
+                        }}
+                      >
+                        {fubenList.map((item, index_i) => {
+                          return fubenList
+                            .filter(
+                              (item) =>
+                                item.id === fubenList[flist[index][0]].id
+                            )[0]
+                            .costs.map((item1, index_j) => {
+                              return (
+                                <Option
+                                  value={`${index_i},${index_j}`}
+                                  key={item.name + item1.lv}
+                                  disabled={item.status == 0}
+                                >
+                                  {item.name}-LV.{item1.lv}
+                                </Option>
+                              );
+                            });
+                        })}
+                      </Select>
+                    ) : (
+                      <Select
+                      style={{width: 200}}
+                        defaultValue={`${
+                          fubenList[isMark ? fuben : flist[index][0] || 0].name
+                        }-LV.${fubenlvList[isMark ? fuben2 : flist[index][1] || 0].lv}`}
+                        onChange={(value) => {
+                          const [i, j] = value.split(",");
+                          setIsMark(false);
+                          record["l"] = fubenList[i].id;
+                          record["lv"] = fubenlvList[j].lv;
+                          setFubenlvlist(
+                            fubenList.filter(
+                              (item) =>
+                                item.id === fubenList[flist[index][0]].id
+                            )[0].costs
+                          );
+                        }}
+                      >
+                        {fubenList.map((item, index_i) => {
+                          return fubenList
+                            .filter(
+                              (item) =>
+                                item.id === fubenList[flist[index][0]].id
+                            )[0]
+                            .costs.map((item1, index_j) => {
+                              return (
+                                <Option
+                                  value={`${index_i},${index_j}`}
+                                  key={item.name + item1.lv}
+                                  disabled={item.status == 0}
+                                >
+                                  {item.name}-LV.{item1.lv}
+                                </Option>
+                              );
+                            });
+                        })}
+                      </Select>
+                    );
+                  },
+                },
+                {
+                  title: "次数",
+                  dataIndex: "num",
+                },
+              ]
+        }
         dataSource={myHeroList}
-        pagination={{
-          formatPageText: !isMobile(),
-        }}
+        pagination={false}
         rowSelection={{
           selectedRowKeys: selectedRowKeys,
           onChange: (selectedRowKeys, selectedRows) => {
@@ -945,15 +1073,15 @@ const MaoXian = ({ address, contracts }) => {
               // console.log(mxlist);
               ff(
                 (mxlist.length >= 30
-                  ? 0.0001
-                  : mxlist.length >= 20
                   ? 0.0003
-                  : mxlist.length >= 10
+                  : mxlist.length >= 20
                   ? 0.0005
-                  : 0.001) * mxlist.length,
+                  : mxlist.length >= 10
+                  ? 0.0008
+                  : 0.002) * mxlist.length,
                 address,
                 () => {
-                  nlogList = []
+                  nlogList = [];
                   setOkNum(0);
                   if (mxlist.length > 0) {
                     // const mx = mxlist.shift();
@@ -1026,50 +1154,62 @@ const MaoXian = ({ address, contracts }) => {
             >
               <Tag color="green" size="large">
                 1级{" "}
-                { (isMark && fuben === 0 && fuben2 === 0) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
-                  (pre, item) => pre + (item.lv === 1 ? item.num : pre + 0),
-                  0
-                )}
+                {isMark && fuben === 0 && fuben2 === 0
+                  ? mxlist.reduce((pre, item) => pre + item.num, 0)
+                  : mxlist.reduce(
+                      (pre, item) => pre + (item.lv === 1 ? item.num : pre + 0),
+                      0
+                    )}
                 次
               </Tag>
               <Tag color="blue" size="large">
                 2级{" "}
-                { (isMark && fuben === 0 && fuben2 === 1) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
-                  (pre, item) => pre + (item.lv === 2 ? item.num : pre + 0),
-                  0
-                )}{" "}
+                {isMark && fuben === 0 && fuben2 === 1
+                  ? mxlist.reduce((pre, item) => pre + item.num, 0)
+                  : mxlist.reduce(
+                      (pre, item) => pre + (item.lv === 2 ? item.num : pre + 0),
+                      0
+                    )}{" "}
                 次
               </Tag>
               <Tag color="red" size="large">
                 3级{" "}
-                { (isMark && fuben === 0 && fuben2 === 2) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
-                  (pre, item) => pre + (item.lv === 3 ? item.num : pre + 0),
-                  0
-                )}{" "}
+                {isMark && fuben === 0 && fuben2 === 2
+                  ? mxlist.reduce((pre, item) => pre + item.num, 0)
+                  : mxlist.reduce(
+                      (pre, item) => pre + (item.lv === 3 ? item.num : pre + 0),
+                      0
+                    )}{" "}
                 次
               </Tag>
               <Tag color="blue" size="large">
                 4级{" "}
-                { (isMark && fuben === 1 && fuben2 === 0) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
-                  (pre, item) => (pre + item.lv == 4 ? item.num : pre + 0),
-                  0
-                )}
+                {isMark && fuben === 1 && fuben2 === 0
+                  ? mxlist.reduce((pre, item) => pre + item.num, 0)
+                  : mxlist.reduce(
+                      (pre, item) => (pre + item.lv == 4 ? item.num : pre + 0),
+                      0
+                    )}
                 次
               </Tag>
               <Tag color="red" size="large">
                 5级{" "}
-                { (isMark && fuben === 1 && fuben2 === 1) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
-                  (pre, item) => pre + (item.lv === 5 ? item.num : pre + 0),
-                  0
-                )}{" "}
+                {isMark && fuben === 1 && fuben2 === 1
+                  ? mxlist.reduce((pre, item) => pre + item.num, 0)
+                  : mxlist.reduce(
+                      (pre, item) => pre + (item.lv === 5 ? item.num : pre + 0),
+                      0
+                    )}{" "}
                 次
               </Tag>
               <Tag color="green" size="large">
                 6级{" "}
-                { (isMark && fuben === 1 && fuben2 === 2) ? mxlist.reduce((pre, item) => pre + item.num, 0) : mxlist.reduce(
-                  (pre, item) => pre + (item.lv === 6 ? item.num : pre + 0),
-                  0
-                )}{" "}
+                {isMark && fuben === 1 && fuben2 === 2
+                  ? mxlist.reduce((pre, item) => pre + item.num, 0)
+                  : mxlist.reduce(
+                      (pre, item) => pre + (item.lv === 6 ? item.num : pre + 0),
+                      0
+                    )}{" "}
                 次
               </Tag>
               {/* <Tag color="green">
@@ -1160,15 +1300,19 @@ const MaoXian = ({ address, contracts }) => {
                 BNX {nlogList.reduce((pre, item) => pre + item.reward_coin, 0)}
               </Tag>
               <Tag color="yellow">
-                金币 {nlogList.reduce((pre, item) => pre + item.reward_money, 0)}
+                金币{" "}
+                {nlogList.reduce((pre, item) => pre + item.reward_money, 0)}
               </Tag>
               {/* <Tag>
                 钥匙 {nlogList.reduce((pre, item) => pre + item.reward_coupon, 0)}
               </Tag> */}
               <Tag>
                 装备{" "}
-                {nlogList.reduce((pre, item) => item.reward_eqs.length + pre, 0)}
-                {" "}件
+                {nlogList.reduce(
+                  (pre, item) => item.reward_eqs.length + pre,
+                  0
+                )}{" "}
+                件
               </Tag>
             </Space>
           </p>
@@ -1186,7 +1330,7 @@ const MaoXian = ({ address, contracts }) => {
               <p>已打</p>
               <p style={{ fontSize: 40, margin: 10 }}>{oknum}</p>
               <p style={{ margin: 10 }}>冒险中,请不要关闭网页</p>
-              <Spin size="large"  style={{ margin: 10 }}/>
+              <Spin size="large" style={{ margin: 10 }} />
             </div>
           ) : (
             <></>

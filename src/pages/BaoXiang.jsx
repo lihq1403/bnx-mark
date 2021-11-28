@@ -435,6 +435,7 @@ const BaoXiang = ({ address, contracts }) => {
         dataSource={nlogs}
         pagination={{
           formatPageText: !isMobile(),
+          pageSize: 9999
         }}
         bordered
       />

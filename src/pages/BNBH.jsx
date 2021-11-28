@@ -189,6 +189,7 @@ const BNBH = ({ address, contracts }) => {
         .getTownsOfPlayer(address)
         .call()
         .then((list) => {
+          console.log(list);
           setTownList(list);
         })
         .catch(() => {});
@@ -212,12 +213,16 @@ const BNBH = ({ address, contracts }) => {
           if (data.rewards == "0") {
             Notification.error({
               title: `英雄 ${item.tokenId} 战斗失败}`,
-              content: `收益:${(Number(data.rewards) / Math.pow(10, 18).toFixed(4))}   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
+              content: `收益:${
+                Number(data.rewards) / Math.pow(10, 18).toFixed(4)
+              }   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
             });
           } else {
             Notification.success({
               title: `英雄 ${item.tokenId} 战斗胜利`,
-              content: `收益:${(Number(data.rewards) / Math.pow(10, 18).toFixed(4))}   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
+              content: `收益:${
+                Number(data.rewards) / Math.pow(10, 18).toFixed(4)
+              }   经验值:${data.xpGained}   损失血量:${data.hpLoss}`,
             });
           }
           getHero();
@@ -484,33 +489,76 @@ const BNBH = ({ address, contracts }) => {
                           英雄:{record.info.tokenId} 等级:{record.info.level}
                         </span>
                         <span>
-                          血量:{record.info.hp} 经验:{record.info.xp}
+                          血量:
+                          {record.info.hp > 1000000000
+                            ? `英雄未到达`
+                            : record.info.hp}{" "}
+                          经验:{record.info.xp}/{record.info.level * 1000 + 999 }
                         </span>
                         <span>
                           攻击:{record.info.attack} 防御:{record.info.armor}{" "}
                           速度:{record.info.speed}
                         </span>
-                        <Button
-                          size="small"
-                          disabled={record.info.hp < 200}
-                          onClick={() => {
-                            if (!address || !contracts) {
-                              Notification.info({
-                                content: "3秒后不显示钱包地址, 请刷新网页",
-                              });
-                              return;
+                        {record.info.xp >= record.info.level * 1000 + 999 ? (
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              contracts.bnbhFightContract.methods
+                                .getPriceToUnlockLevel(record.info.level + 1)
+                                .call()
+                                .then((v) => {
+                                  const s =
+                                    Math.floor(
+                                      100 *
+                                        initWeb3(
+                                          Web3.givenProvider
+                                        ).utils.fromWei(v)
+                                    ) / 100;
+                                  Notification.info({
+                                    content: `英雄${record.tokenId} 升级LV.${
+                                      record.info.level + 1
+                                    }需要花费${s}BNBH`,
+                                  });
+                                  contracts.bnbhFightContract.methods
+                                    .unLockLevel(record.info.level + 1)
+                                    .send({ from: address })
+                                    .then((r) => {
+                                      Notification.success({
+                                        content: `英雄${
+                                          record.tokenId
+                                        } 已升级LV${record.info.level + 1}`,
+                                      });
+                                    });
+                                });
+                            }}
+                          >
+                            升级
+                          </Button>
+                        ) : (
+                          <Button
+                            size="small"
+                            disabled={
+                              record.info.hp < 200 || record.info.attack == 0
                             }
-                            ff3(
-                              0.001 * Math.ceil(Number(record.info.hp) / 200),
-                              address,
-                              () => {
-                                fight(record.info);
+                            onClick={() => {
+                              if (!address || !contracts) {
+                                Notification.info({
+                                  content: "3秒后不显示钱包地址, 请刷新网页",
+                                });
+                                return;
                               }
-                            );
-                          }}
-                        >
-                          战斗
-                        </Button>
+                              ff3(
+                                0.001 * Math.ceil(Number(record.info.hp) / 200),
+                                address,
+                                () => {
+                                  fight(record.info);
+                                }
+                              );
+                            }}
+                          >
+                            战斗
+                          </Button>
+                        )}
                       </div>
                     );
                   },
@@ -566,14 +614,20 @@ const BNBH = ({ address, contracts }) => {
                   title: "血量",
                   dataIndex: "hp",
                   render: (info, record) => {
-                    return <span>{record.info.hp}</span>;
+                    return (
+                      <span>
+                        {record.info.hp > 1000000000
+                          ? `英雄未到达`
+                          : record.info.hp}
+                      </span>
+                    );
                   },
                 },
                 {
                   title: "经验",
                   dataIndex: "xp",
                   render: (info, record) => {
-                    return <span>{record.info.xp}</span>;
+                    return <span>{record.info.xp}/{record.info.level * 1000 + 999 }</span>;
                   },
                 },
                 {
@@ -582,26 +636,64 @@ const BNBH = ({ address, contracts }) => {
                   render: (info, record) => {
                     return (
                       <Space style={{ display: "flex", flexWrap: "wrap" }}>
-                        <Button
-                          disabled={record.info.hp < 200}
-                          onClick={() => {
-                            if (!address || !contracts) {
-                              Notification.info({
-                                content: "3秒后不显示钱包地址, 请刷新网页",
-                              });
-                              return;
+                        {record.info.xp >= record.info.level * 1000 + 999 ? (
+                          <Button
+                            onClick={() => {
+                              contracts.bnbhFightContract.methods
+                                .getPriceToUnlockLevel(record.info.level + 1)
+                                .call()
+                                .then((v) => {
+                                  const s =
+                                    Math.floor(
+                                      100 *
+                                        initWeb3(
+                                          Web3.givenProvider
+                                        ).utils.fromWei(v)
+                                    ) / 100;
+                                  Notification.info({
+                                    content: `英雄${record.tokenId} 升级LV.${
+                                      record.info.level + 1
+                                    }需要花费${s}BNBH`,
+                                  });
+                                  contracts.bnbhFightContract.methods
+                                    .unLockLevel(record.info.level + 1)
+                                    .send({ from: address })
+                                    .then((r) => {
+                                      Notification.success({
+                                        content: `英雄${
+                                          record.tokenId
+                                        } 已升级LV${record.info.level + 1}`,
+                                      });
+                                    });
+                                });
+                            }}
+                          >
+                            升级
+                          </Button>
+                        ) : (
+                          <Button
+                            disabled={
+                              record.info.hp < 200 || record.info.attack == 0
                             }
-                            ff3(
-                              0.001 * Math.ceil(Number(record.info.hp) / 200),
-                              address,
-                              () => {
-                                fight(record.info);
+                            onClick={() => {
+                              if (!address || !contracts) {
+                                Notification.info({
+                                  content: "3秒后不显示钱包地址, 请刷新网页",
+                                });
+                                return;
                               }
-                            );
-                          }}
-                        >
-                          战斗
-                        </Button>
+                              ff3(
+                                0.001 * Math.ceil(Number(record.info.hp) / 200),
+                                address,
+                                () => {
+                                  fight(record.info);
+                                }
+                              );
+                            }}
+                          >
+                            战斗
+                          </Button>
+                        )}
                       </Space>
                     );
                   },
@@ -650,7 +742,9 @@ const BNBH = ({ address, contracts }) => {
                           名称:{towns[index]} 等级:
                           <span>
                             {Number(record.level) + 1}
-                            {record.lastUpgradedTimeStamp == 0
+                            {record.lastUpgradedTimeStamp == 0 ||
+                            record.lastUpgradedTimeStamp <
+                              new Date().getTime() / 1000
                               ? ""
                               : "(升级中)"}
                           </span>
@@ -669,7 +763,9 @@ const BNBH = ({ address, contracts }) => {
                         <span>
                           升级结束时间:
                           <span>
-                            {record.lastUpgradedTimeStamp == 0
+                            {record.lastUpgradedTimeStamp == 0 ||
+                            record.lastUpgradedTimeStamp <
+                              new Date().getTime() / 1000
                               ? 0
                               : `${Math.floor(
                                   (record.lastUpgradedTimeStamp -
@@ -703,7 +799,11 @@ const BNBH = ({ address, contracts }) => {
                     return (
                       <span>
                         {Number(text) + 1}
-                        {record.lastUpgradedTimeStamp == 0 ? "" : "(升级中)"}
+                        {record.lastUpgradedTimeStamp == 0 ||
+                        record.lastUpgradedTimeStamp <
+                          new Date().getTime() / 1000
+                          ? ""
+                          : "(升级中)"}
                       </span>
                     );
                   },
@@ -736,7 +836,7 @@ const BNBH = ({ address, contracts }) => {
                   render: (text) => {
                     return (
                       <span>
-                        {text == 0
+                        {text == 0 || text < new Date().getTime() / 1000
                           ? 0
                           : `${Math.floor(
                               (text - new Date().getTime() / 1000) / 3600
